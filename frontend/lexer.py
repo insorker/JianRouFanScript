@@ -4,7 +4,6 @@ import re
 
 class TokenType(Enum):
   NUMBER = auto()
-# FIXME:
   IDENTIFIER = auto()
   STRING = auto()
   BINARY_OPERATER = auto()
