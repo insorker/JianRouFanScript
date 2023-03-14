@@ -1,31 +1,28 @@
 from enum import Enum, auto
 import re
 
+
 class TokenType(Enum):
   NUMBER = auto()
-  STRING = auto()
+# FIXME:
   IDENTIFIER = auto()
-  
-  LET = auto()
-
-  BINARY_OPERATOR = auto()
+  STRING = auto()
+  BINARY_OPERATER = auto()
   EQUALS = auto()
   OPEN_PAREN = auto()
   CLOSE_PAREN = auto()
-
   SPACE = auto()
   EOF = auto()
 
 TOKEN_REGEX = {
-  TokenType.NUMBER:           r'[1-9][0-9]*',
-  TokenType.IDENTIFIER:       r'[a-zA-Z_]+[a-zA-Z_0-9]*',
-  TokenType.STRING:           r'["].*?["]',
-  TokenType.LET:              r'let',
-  TokenType.BINARY_OPERATOR:  r'[+\-*/%]',
-  TokenType.EQUALS:           r'=',
-  TokenType.OPEN_PAREN:       r'\(',
-  TokenType.CLOSE_PAREN:      r'\)',
-  TokenType.SPACE:            r'[ \t\r]+',
+  TokenType.NUMBER: r'[1-9]+[0-9]*|0',
+  TokenType.IDENTIFIER: r'[a-zA-Z_]+[a-zA-Z_0-9]*',
+  TokenType.STRING: r'".*?"',
+  TokenType.BINARY_OPERATER: r'[+\-*/%]',
+  TokenType.EQUALS: r'=',
+  TokenType.OPEN_PAREN: r'\(',
+  TokenType.CLOSE_PAREN: r'\)',
+  TokenType.SPACE: r'[ \t\r]',
 }
 
 class Token:
@@ -47,19 +44,17 @@ def tokenize(code: str) -> list[Token]:
       if match:
         value = match.group()
         code = code[len(value):]
-        if tokentype != TokenType.SPACE:
+
+        if tokentype == TokenType.SPACE:
+          continue
+        elif tokentype == TokenType.STRING:
+          tokens.append(Token(tokentype, value[1:-1]))
+        else:
           tokens.append(Token(tokentype, value))
         break
-        
-    if not match:
-      raise Exception(__file__, 'No valid match: ', code)
+
+    if match == None:
+      raise Exception(__file__, 'Not valid charater: ', code[0])
 
   tokens.append(Token(TokenType.EOF, 'EOF'))
-
   return tokens
-
-while True:
-  src = input('>>>')
-  tokens = tokenize(src)
-  for token in tokens:
-    print(token)
