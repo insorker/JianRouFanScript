@@ -1,4 +1,4 @@
-from .ast import BinaryExpr, Expr, Factor, NumberFactor, Program, Stmt
+from .ast import BinaryExpr, Expr, NumberFactor, Program, Stmt
 from .lexer import Token, TokenType, tokenize
 
 
@@ -7,7 +7,7 @@ class Parser:
     self.tokens: list[Token] = []
 
   def tk(self) -> Token:
-    """return current token or None in parser"""
+    """return current token in parser"""
     return self.tokens[0]
 
   def eat(self) -> Token:

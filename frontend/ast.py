@@ -1,7 +1,7 @@
 from enum import Enum, auto
 
 
-class AstType(Enum):
+class NodeType(Enum):
   PROGRAM = auto()
   # statement
   STMT = auto()
@@ -14,7 +14,7 @@ class AstType(Enum):
 
 class Program:
   def __init__(self) -> None:
-    self.type = AstType.PROGRAM
+    self.type = NodeType.PROGRAM
     self.body: list[Stmt] = []
   
   def __repr__(self) -> str:
@@ -27,18 +27,18 @@ class Program:
 
 class Stmt:
   def __init__(self) -> None:
-    self.type = AstType.STMT
+    self.type = NodeType.STMT
   
   def __repr__(self, depth) -> str:
     return '\t' * depth + f'{self.type.name}'
   
 class Expr(Stmt):
   def __init__(self) -> None:
-    self.type = AstType.EXPR
+    self.type = NodeType.EXPR
 
 class BinaryExpr(Expr):
   def __init__(self, left: Expr, right: Expr, operator: str) -> None:
-    self.type = AstType.BINARY_EXPR
+    self.type = NodeType.BINARY_EXPR
     self.left: Expr = left
     self.right: Expr = right
     self.operator: str = operator
@@ -55,11 +55,11 @@ class BinaryExpr(Expr):
 
 class Factor(Expr):
   def __init__(self) -> None:
-    self.type = AstType.FACTOR
+    self.type = NodeType.FACTOR
 
 class NumberFactor(Factor):
   def __init__(self, value: int) -> None:
-    self.type = AstType.NUMBER_FACTOR
+    self.type = NodeType.NUMBER_FACTOR
     self.value: int = value
   
   def __repr__(self, depth) -> str:
