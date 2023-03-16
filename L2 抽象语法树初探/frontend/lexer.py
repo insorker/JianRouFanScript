@@ -3,7 +3,6 @@ import re
 
 class TokenType(Enum):
   NUMBER = auto()
-# FIXME:
   IDENTIFIER = auto()
   STRING = auto()
   BINARY_OPERATER = auto()
@@ -14,9 +13,7 @@ class TokenType(Enum):
   EOF = auto()
 
 TOKEN_REGEX = {
-# FIXME:
   TokenType.NUMBER: r'[1-9]+[0-9]*|0',
-# FIXME:
   TokenType.IDENTIFIER: r'[a-zA-Z_]+[a-zA-Z_0-9]*',
   TokenType.STRING: r'".*?"',
   TokenType.BINARY_OPERATER: r'[+\-*/%]',
@@ -45,7 +42,7 @@ def tokenize(code: str) -> list[Token]:
       if match:
         value = match.group()
         code = code[len(value):]
-        # FIXME:
+
         if tokentype == TokenType.SPACE:
           continue
         elif tokentype == TokenType.STRING:
@@ -59,11 +56,3 @@ def tokenize(code: str) -> list[Token]:
 
   tokens.append(Token(TokenType.EOF, 'EOF'))
   return tokens
-
-
-print('Repl v1.0:')
-while True:
-  code = input('>>> ')
-  tokens = tokenize(code)
-  for token in tokens:
-    print(token)
