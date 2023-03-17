@@ -5,12 +5,16 @@ class NodeType(Enum):
   PROGRAM = auto()
   # statement
   STMT = auto()
+  DECLARATION_STMT = auto()
+  ASSIGNMENT_STMT = auto()
   # expression
   EXPR = auto()
   BINARY_EXPR = auto()
   # factor
   FACTOR = auto()
-  NUMBER_FACTOR= auto()
+  NUMBER_FACTOR = auto()
+  VARIABLE_FACTOR = auto()
+  NULL_FACTOR = auto()
 
 class Program:
   def __init__(self) -> None:
@@ -36,6 +40,30 @@ class Expr(Stmt):
   def __init__(self) -> None:
     self.type = NodeType.EXPR
 
+class Factor(Expr):
+  def __init__(self) -> None:
+    self.type = NodeType.FACTOR
+
+class VariableFactor(Factor):
+  def __init__(self, symbol: str) -> None:
+    self.type = NodeType.VARIABLE_FACTOR
+    self.symbol: str = symbol
+  
+  def __repr__(self, depth) -> str:
+    return depth * '\t' + f'{{ {self.type.name}, {self.symbol} }}'
+
+class DeclarationStmt(Stmt):
+  def __init__(self, left: VariableFactor, right: Expr) -> None:
+    self.type = NodeType.DECLARATION_STMT
+    self.left: VariableFactor = left
+    self.right: Expr = right
+
+class AssignmentStmt(Stmt):
+  def __init__(self, left: VariableFactor, right: Expr) -> None:
+    self.type = NodeType.ASSIGNMENT_STMT
+    self.left: VariableFactor = left
+    self.right: Expr = right
+
 class BinaryExpr(Expr):
   def __init__(self, left: Expr, right: Expr, operator: str) -> None:
     self.type = NodeType.BINARY_EXPR
@@ -53,10 +81,6 @@ class BinaryExpr(Expr):
 
     return res
 
-class Factor(Expr):
-  def __init__(self) -> None:
-    self.type = NodeType.FACTOR
-
 class NumberFactor(Factor):
   def __init__(self, value: int) -> None:
     self.type = NodeType.NUMBER_FACTOR
@@ -64,3 +88,10 @@ class NumberFactor(Factor):
   
   def __repr__(self, depth) -> str:
     return depth * '\t' + f'{{ {self.type.name}, {self.value} }}'
+
+class NullFactor(Factor):
+  def __init__(self) -> None:
+    self.type = NodeType.NULL_FACTOR
+  
+  def __repr__(self, depth) -> str:
+    return depth * '\t' + f'{{ {self.type.name} }}'

@@ -4,15 +4,14 @@ import backend
 
 def repl():
   print('JRF - v0.1.0')
+  parser = frontend.Parser()
+  interpreter = backend.Interpreter()
 
   while True:  
     code = input('~ > ')
     if code == 'exit':
       return
-    
-    parser = frontend.Parser()
-    interpreter = backend.Interpreter()
-    
+
     program = parser.parse(code)
     result = interpreter.interpret(program)
 

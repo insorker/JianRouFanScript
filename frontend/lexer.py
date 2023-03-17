@@ -3,24 +3,36 @@ import re
 
 
 class TokenType(Enum):
+  LET = auto()
+
   NUMBER = auto()
   IDENTIFIER = auto()
   STRING = auto()
-  BINARY_OPERATER = auto()
+
+  OPERATER = auto()
   EQUALS = auto()
+
   OPEN_PAREN = auto()
   CLOSE_PAREN = auto()
+  OPEN_BRACE = auto()
+  CLOSE_BRACE = auto()
+  SEMICOLON = auto()
+
   SPACE = auto()
   EOF = auto()
 
 TOKEN_REGEX = {
+  TokenType.LET: r'let',
   TokenType.NUMBER: r'[1-9]+[0-9]*|0',
   TokenType.IDENTIFIER: r'[a-zA-Z_]+[a-zA-Z_0-9]*',
   TokenType.STRING: r'".*?"',
-  TokenType.BINARY_OPERATER: r'[+\-*/%]',
+  TokenType.OPERATER: r'[+\-*/%]',
   TokenType.EQUALS: r'=',
   TokenType.OPEN_PAREN: r'\(',
   TokenType.CLOSE_PAREN: r'\)',
+  TokenType.OPEN_BRACE: r'{',
+  TokenType.CLOSE_BRACE: r'}',
+  TokenType.SEMICOLON: r';',
   TokenType.SPACE: r'[ \t\r]',
 }
 
