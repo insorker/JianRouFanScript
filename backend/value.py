@@ -8,6 +8,10 @@ class ValueType(Enum):
 class Value:
   def __init__(self, type: ValueType) -> None:
     self.type: ValueType = type
+    self.value: str = ''
+  
+  def __repr__(self) -> str:
+    return str(self.value)
 
 class NumberValue(Value):
   def __init__(self, value: int) -> None:

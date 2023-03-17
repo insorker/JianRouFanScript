@@ -85,4 +85,4 @@ class Parser:
       self.expect(TokenType.CLOSE_PAREN, 'Missing closs parenthesis or unexpected token.')
       return value
 
-    raise Exception(__file__, 'Cannot parse ', self.tk, ' to factor.')
+    raise Exception(__file__, 'Cannot parse ' + self.tk().type.name + ' to factor.')

@@ -53,7 +53,7 @@ def tokenize(code: str) -> list[Token]:
         break
 
     if match == None:
-      raise Exception(__file__, 'Not valid charater: ', code[0])
+      raise Exception(__file__, 'Not valid charater: ' + code[0])
 
   tokens.append(Token(TokenType.EOF, 'EOF'))
   return tokens
