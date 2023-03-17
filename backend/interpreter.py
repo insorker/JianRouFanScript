@@ -8,10 +8,5 @@ class Interpreter:
   def __init__(self) -> None:
     self.env = Environment()
 
-  def interpret(self, program: Ast.Program) -> list[Value]:
-    result = []
-
-    for stmt in program.body:
-      result.append(eval_stmt(stmt, self.env))
-    
-    return result
+  def interpret(self, program: Ast.Program) -> Value | None:
+    return eval_scope(program.body, self.env)

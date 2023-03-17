@@ -7,6 +7,18 @@ from backend.evaluator.expression import eval_expr
 from typing import cast
 
 
+def eval_scope(scope: list, env: Environment) -> Value | None:
+  result = None
+
+  for stmt in scope:
+    if type(stmt) == list:
+      nested_env = Environment(env)
+      result = eval_scope(stmt, nested_env)
+    else:
+      result = eval_stmt(stmt, env)
+
+  return result
+
 def eval_stmt(stmt: Ast.Stmt, env: Environment) -> Value:
   if stmt.type == Ast.NodeType.DECLARATION_STMT:
     return eval_declaration_stmt(cast(Ast.DeclarationStmt, stmt), env)
