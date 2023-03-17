@@ -8,4 +8,4 @@
 
 - 源码详见
 
-  - [SourceCode branch](https://github.com/insorker/JianRouFanScript/tree/SourceCode)
+  - [source branch](https://github.com/insorker/JianRouFanScript/tree/source)
