@@ -31,7 +31,7 @@ class Parser:
       if self._tk().type == TokenType.OPEN_BRACE:
         program.body.append(self.parse_scope())
       else:
-        program.body.append(*self.parse_stmt_list())
+        program.body += self.parse_stmt_list()
     
     return program
   

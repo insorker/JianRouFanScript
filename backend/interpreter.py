@@ -1,7 +1,8 @@
-from .value import Value
 from frontend import *
-from .evaluator import *
-from .environment import Environment
+
+from backend.value import Value
+from backend.evaluator import eval_scope
+from backend.environment import Environment
 
 
 class Interpreter:

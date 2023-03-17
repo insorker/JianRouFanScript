@@ -34,7 +34,7 @@ TOKEN_REGEX = {
   TokenType.CLOSE_PAREN: r'\)',
   TokenType.OPEN_BRACE: r'{',
   TokenType.CLOSE_BRACE: r'}',
-  TokenType.SEMICOLON: r';',
+  TokenType.SEMICOLON: r'[;\n]',
   TokenType.SPACE: r'[ \t\r]',
 }
 
