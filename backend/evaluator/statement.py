@@ -1,7 +1,9 @@
-from backend.value import *
 from frontend import *
-from .expression import eval_expr
-from ..environment import Environment
+
+from backend.value import Value, NullValue
+from backend.environment import Environment
+from backend.evaluator.expression import eval_expr
+
 from typing import cast
 
 
@@ -14,9 +16,11 @@ def eval_stmt(stmt: Ast.Stmt, env: Environment) -> Value:
     return eval_expr(cast(Ast.Expr, stmt), env)
 
 def eval_declaration_stmt(stmt: Ast.DeclarationStmt, env: Environment) -> Value:
-  env.declare(stmt.left.symbol, eval_expr(stmt.right, env), False)
+  if stmt.left.type == Ast.NodeType.VARIABLE_FACTOR:
+    env.declare(cast(Ast.VariableFactor, stmt.left).symbol, eval_expr(stmt.right, env))
   return NullValue()
 
 def eval_assignment_stmt(stmt: Ast.AssignmentStmt, env: Environment) -> Value:
-  env.assign(stmt.left.symbol, eval_expr(stmt.right, env))
+  if stmt.left.type == Ast.NodeType.VARIABLE_FACTOR:
+    env.assign(cast(Ast.VariableFactor, stmt.left).symbol, eval_expr(stmt.right, env))
   return NullValue()

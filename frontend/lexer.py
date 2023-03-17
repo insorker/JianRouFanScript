@@ -4,6 +4,7 @@ import re
 
 class TokenType(Enum):
   LET = auto()
+  CONST = auto()
 
   NUMBER = auto()
   IDENTIFIER = auto()
@@ -23,6 +24,7 @@ class TokenType(Enum):
 
 TOKEN_REGEX = {
   TokenType.LET: r'let',
+  TokenType.CONST: r'const',
   TokenType.NUMBER: r'[1-9]+[0-9]*|0',
   TokenType.IDENTIFIER: r'[a-zA-Z_]+[a-zA-Z_0-9]*',
   TokenType.STRING: r'".*?"',

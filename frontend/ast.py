@@ -19,7 +19,7 @@ class NodeType(Enum):
 class Program:
   def __init__(self) -> None:
     self.type = NodeType.PROGRAM
-    self.body: list[Stmt] = []
+    self.body: list = []
   
   def __repr__(self) -> str:
     res = '{'
@@ -44,24 +44,17 @@ class Factor(Expr):
   def __init__(self) -> None:
     self.type = NodeType.FACTOR
 
-class VariableFactor(Factor):
-  def __init__(self, symbol: str) -> None:
-    self.type = NodeType.VARIABLE_FACTOR
-    self.symbol: str = symbol
-  
-  def __repr__(self, depth) -> str:
-    return depth * '\t' + f'{{ {self.type.name}, {self.symbol} }}'
-
 class DeclarationStmt(Stmt):
-  def __init__(self, left: VariableFactor, right: Expr) -> None:
+  def __init__(self, left: Expr, right: Expr, const: bool) -> None:
     self.type = NodeType.DECLARATION_STMT
-    self.left: VariableFactor = left
+    self.left: Expr = left
     self.right: Expr = right
+    self.const: bool = const
 
 class AssignmentStmt(Stmt):
-  def __init__(self, left: VariableFactor, right: Expr) -> None:
+  def __init__(self, left: Expr, right: Expr) -> None:
     self.type = NodeType.ASSIGNMENT_STMT
-    self.left: VariableFactor = left
+    self.left: Expr = left
     self.right: Expr = right
 
 class BinaryExpr(Expr):
@@ -88,6 +81,14 @@ class NumberFactor(Factor):
   
   def __repr__(self, depth) -> str:
     return depth * '\t' + f'{{ {self.type.name}, {self.value} }}'
+
+class VariableFactor(Factor):
+  def __init__(self, symbol: str) -> None:
+    self.type = NodeType.VARIABLE_FACTOR
+    self.symbol: str = symbol
+  
+  def __repr__(self, depth) -> str:
+    return depth * '\t' + f'{{ {self.type.name}, {self.symbol} }}'
 
 class NullFactor(Factor):
   def __init__(self) -> None:

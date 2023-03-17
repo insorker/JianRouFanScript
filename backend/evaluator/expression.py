@@ -1,7 +1,9 @@
-from backend.value import *
 from frontend import *
-from .factor import eval_error, eval_factor
-from ..environment import Environment
+
+from backend.value import Value, ValueType, NumberValue
+from backend.environment import Environment
+from backend.evaluator.factor import eval_error, eval_factor
+
 from typing import cast
 
 

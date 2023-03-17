@@ -1,5 +1,5 @@
 from typing import cast
-from .ast import AssignmentStmt, BinaryExpr, DeclarationStmt, Expr, Factor, VariableFactor, NullFactor, NumberFactor, Program, Stmt
+from .ast import AssignmentStmt, BinaryExpr, DeclarationStmt, Expr, VariableFactor, NullFactor, NumberFactor, Program, Stmt
 from .lexer import Token, TokenType, tokenize
 
 
@@ -7,12 +7,12 @@ class Parser:
   def __init__(self) -> None:
     self.tokens: list[Token] = []
 
-  def tk(self) -> Token:
+  def _tk(self) -> Token:
     """return current token in parser"""
     return self.tokens[0]
 
-  def eat(self, tokentype: TokenType) -> Token:
-    if self.tk().type == tokentype:
+  def _eat(self, tokentype: TokenType) -> Token:
+    if self._tk().type == tokentype:
       return self.tokens.pop(0)
     raise Exception(__file__, f'Token {tokentype.name} not found.')
 
@@ -23,79 +23,80 @@ class Parser:
 
   def parse_program(self) -> Program:
     """
-      program: scope*
+      program: (scope | stmt_list)*
     """
     program: Program = Program()
 
-    while self.tk().type != TokenType.EOF:
-      program.body.append(self.parse_scope())
+    while self._tk().type != TokenType.EOF:
+      if self._tk().type == TokenType.OPEN_BRACE:
+        program.body.append(self.parse_scope())
+      else:
+        program.body.append(*self.parse_stmt_list())
     
     return program
   
-  def parse_scope(self) -> Stmt:
+  def parse_scope(self) -> list:
     """
       scope: OPEN_BRACE stmt_list CLOSE_BRACE
-           | stmt_list
     """
-    if self.tk().type == TokenType.OPEN_BRACE:
-      self.eat(TokenType.OPEN_BRACE)
-      result = self.parse_stmt_list()
-      self.eat(TokenType.CLOSE_BRACE)
-      return result
-  
-    return self.parse_stmt_list()
+    self._eat(TokenType.OPEN_BRACE)
+    node = self.parse_stmt_list()
+    self._eat(TokenType.CLOSE_BRACE)
+    return node
 
-  def parse_stmt_list(self) -> Stmt:
+  def parse_stmt_list(self) -> list:
     """
       stmt_list: stmt
-               | stmt SEMICOLON stmt_list
+               | stmt (SEMICOLON stmt)*
     """
+    node = [ self.parse_stmt() ]
 
-    result = self.parse_stmt()
-    if self.tk().type == TokenType.SEMICOLON:
-      self.eat(TokenType.SEMICOLON)
-      result = self.parse_stmt_list()
+    while self._tk().type == TokenType.SEMICOLON:
+      self._eat(TokenType.SEMICOLON)
+      node.append(self.parse_stmt())
 
-    return result
+    return node
 
-  def parse_stmt(self) -> Stmt:
+  def parse_stmt(self) -> list | Stmt:
     """
       stmt: scope
           | declaration_stmt
           | assignment_stmt
-          | expression
     """
-    if self.tk().type == TokenType.OPEN_BRACE:
+    if self._tk().type == TokenType.OPEN_BRACE:
       return self.parse_scope()
-    elif self.tk().type == TokenType.LET:
-      return self.parse_declaration_stmt()
-    elif self.tk().type == TokenType.IDENTIFIER and self.tokens[1].type == TokenType.EQUALS:
-      return self.parse_assignment_stmt()
+    elif self._tk().type == TokenType.LET:
+      return self.parse_declaration_stmt(False)
+    elif self._tk().type == TokenType.CONST:
+      return self.parse_declaration_stmt(True)
     else:
-      return self.parse_expression()
+      return self.parse_assignment_stmt()
   
-  def parse_declaration_stmt(self) -> DeclarationStmt:
+  def parse_declaration_stmt(self, const: bool) -> DeclarationStmt:
     """
       declaration: LET identifier EQUALS expr
     """
-    self.eat(TokenType.LET)
+    self._eat(TokenType.LET)
     left = self.parse_variable_factor()
-    self.eat(TokenType.EQUALS)
-    right = self.parse_expression()
+    self._eat(TokenType.EQUALS)
+    right = self.parse_expr()
 
-    return DeclarationStmt(left, right)
+    return DeclarationStmt(left, right, const)
 
-  def parse_assignment_stmt(self) -> AssignmentStmt:
+  def parse_assignment_stmt(self) -> AssignmentStmt | Expr:
     """
-      declaration: variable_factor EQUALS expr
+      assignment: expr (EQUALS expr)?
     """
-    left = self.parse_variable_factor()
-    self.eat(TokenType.EQUALS)
-    right = self.parse_expression()
+    left = self.parse_expr()
 
-    return AssignmentStmt(left, right)
+    if self._tk().type == TokenType.EQUALS:
+      self._eat(TokenType.EQUALS)
+      right = self.parse_expr()
+      return AssignmentStmt(left, right)
+    else:
+      return left
 
-  def parse_expression(self) -> Expr:
+  def parse_expr(self) -> Expr:
     """
       expr: binary_expr
     """
@@ -113,8 +114,8 @@ class Parser:
     """
     left = self.parse_multiplicative_expr()
 
-    while self.tk().value == '+' or self.tk().value == '-':
-      operator = self.eat(TokenType.OPERATER).value
+    while self._tk().value == '+' or self._tk().value == '-':
+      operator = self._eat(TokenType.OPERATER).value
       right = self.parse_multiplicative_expr()
       left = BinaryExpr(left, right, operator)
     
@@ -126,15 +127,15 @@ class Parser:
     """
     left = self.parse_factor()
 
-    while self.tk().value == '*' or self.tk().value == '/':
-      operator = self.eat(TokenType.OPERATER).value
+    while self._tk().value == '*' or self._tk().value == '/':
+      operator = self._eat(TokenType.OPERATER).value
       right = self.parse_factor()
       left = BinaryExpr(left, right, operator)
     
     return left
   
   def parse_unary_expr(self) -> Expr:
-    operator = self.eat(TokenType.OPERATER).value
+    operator = self._eat(TokenType.OPERATER).value
 
     if operator == '+' or operator == '-':
       result = self.parse_factor()
@@ -160,17 +161,17 @@ class Parser:
             | variable_factor
             | OPEN_PAREN expr CLOSE_PAREN
     """
-    if self.tk().type == TokenType.OPERATER \
-      and (self.tk().value == '+' or self.tk().value == '-'):
+    if self._tk().type == TokenType.OPERATER \
+      and (self._tk().value == '+' or self._tk().value == '-'):
       return self.parse_unary_expr()
-    elif self.tk().type == TokenType.NUMBER:
+    elif self._tk().type == TokenType.NUMBER:
       return self.parse_number_factor()
-    elif self.tk().type == TokenType.IDENTIFIER:
+    elif self._tk().type == TokenType.IDENTIFIER:
       return self.parse_variable_factor()
-    elif self.tk().type == TokenType.OPEN_PAREN:
-      self.eat(TokenType.OPEN_PAREN)
-      value = self.parse_expression()
-      self.eat(TokenType.CLOSE_PAREN)
+    elif self._tk().type == TokenType.OPEN_PAREN:
+      self._eat(TokenType.OPEN_PAREN)
+      value = self.parse_expr()
+      self._eat(TokenType.CLOSE_PAREN)
       return value
     else:
       return NullFactor()
@@ -179,10 +180,10 @@ class Parser:
     """
       number_factor: NUMBER
     """
-    return NumberFactor(int(self.eat(TokenType.NUMBER).value))
+    return NumberFactor(int(self._eat(TokenType.NUMBER).value))
 
   def parse_variable_factor(self) -> VariableFactor:
     """
       variable_factor: IDENTIFIER
     """
-    return VariableFactor(self.eat(TokenType.IDENTIFIER).value)
+    return VariableFactor(self._eat(TokenType.IDENTIFIER).value)

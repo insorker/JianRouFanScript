@@ -19,7 +19,7 @@ def eval_number_factor(numberFactor: Ast.NumberFactor) -> Value:
   return NumberValue(numberFactor.value)
 
 def eval_variable_factor(variableFactor: Ast.VariableFactor, env: Environment) -> Value:
-  value = env.get_value(variableFactor.symbol)
+  value = env.lookup(variableFactor.symbol)
   return cast(NumberValue, value)
 
 def eval_null_factor(nullFactor: Ast.NullFactor) -> Value:
