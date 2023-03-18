@@ -2,10 +2,12 @@ from enum import Enum, auto
 
 
 class NodeType(Enum):
+  # BLOCK
+  BLOCK = auto()
   PROGRAM = auto()
   # statement
   STMT = auto()
-  DECLARATION_STMT = auto()
+  VARIABLE_DECLARATION_STMT = auto()
   ASSIGNMENT_STMT = auto()
   # expression
   EXPR = auto()
@@ -16,14 +18,27 @@ class NodeType(Enum):
   VARIABLE_FACTOR = auto()
   NULL_FACTOR = auto()
 
-class Program:
+class Block:
+  def __init__(self) -> None:
+    self.type = NodeType.BLOCK
+    self.body: list = []
+
+  def __repr__(self, indent) -> str:
+    res = indent * '\t' + '{'
+    res += '\n' + (indent + 1) * '\t' + self.type.name + ','
+    for stmt in self.body:
+      res += '\n' + stmt.__repr__(indent + 1)
+    res += '\n' + indent * '\t' + '}'
+    return res
+
+class Program(Block):
   def __init__(self) -> None:
     self.type = NodeType.PROGRAM
     self.body: list = []
   
   def __repr__(self) -> str:
     res = '{'
-    res += '\n\t' + self.type.name + ','
+    res += '\n' + '\t' + self.type.name + ','
     for stmt in self.body:
       res += '\n' + stmt.__repr__(1)
     res += '\n}'
@@ -44,9 +59,9 @@ class Factor(Expr):
   def __init__(self) -> None:
     self.type = NodeType.FACTOR
 
-class DeclarationStmt(Stmt):
+class VariableDeclarationStmt(Stmt):
   def __init__(self, left: Expr, right: Expr, const: bool) -> None:
-    self.type = NodeType.DECLARATION_STMT
+    self.type = NodeType.VARIABLE_DECLARATION_STMT
     self.left: Expr = left
     self.right: Expr = right
     self.const: bool = const

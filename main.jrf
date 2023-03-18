@@ -1,7 +1,12 @@
-let x = 1
+let x = 1, y = 8, z
 {
-  x = 4
-  let x = 5;
-  x = 3
+  x = 4  // 321sdafdsafdsa///dfs
+  let y = 5; let z = 7; x = z - y
+  let x = 5, x = y = z;
+  let a = y = z
+  { {
+    x = 100000 }
+  }
 }
-x + (3 -- 2) * 4 / x
+// 1
+x + ((3 -- 2) * 4) / x

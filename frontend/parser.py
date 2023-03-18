@@ -1,5 +1,5 @@
 from typing import cast
-from .ast import AssignmentStmt, BinaryExpr, DeclarationStmt, Expr, VariableFactor, NullFactor, NumberFactor, Program, Stmt
+from .ast import AssignmentStmt, BinaryExpr, VariableDeclarationStmt, Expr, Block, VariableFactor, NullFactor, NumberFactor, Program, Stmt
 from .lexer import Token, TokenType, tokenize
 
 
@@ -23,78 +23,100 @@ class Parser:
 
   def parse_program(self) -> Program:
     """
-      program: (scope | stmt_list)*
+      program: (block | stmt_list)*
     """
     program: Program = Program()
 
     while self._tk().type != TokenType.EOF:
       if self._tk().type == TokenType.OPEN_BRACE:
-        program.body.append(self.parse_scope())
+        program.body.append(self.parse_block())
       else:
         program.body += self.parse_stmt_list()
     
     return program
   
-  def parse_scope(self) -> list:
+  def parse_block(self) -> Block:
     """
-      scope: OPEN_BRACE stmt_list CLOSE_BRACE
+      block: OPEN_BRACE stmt_list CLOSE_BRACE
     """
+    scope = Block()
     self._eat(TokenType.OPEN_BRACE)
-    node = self.parse_stmt_list()
+    scope.body += self.parse_stmt_list()
     self._eat(TokenType.CLOSE_BRACE)
-    return node
+    return scope
 
   def parse_stmt_list(self) -> list:
     """
-      stmt_list: stmt
-               | stmt (SEMICOLON stmt)*
+      stmt_list: stmt (SEMICOLON stmt)*
     """
-    node = [ self.parse_stmt() ]
+    node = self.parse_stmt()
 
     while self._tk().type == TokenType.SEMICOLON:
       self._eat(TokenType.SEMICOLON)
-      node.append(self.parse_stmt())
+      node += self.parse_stmt()
 
     return node
 
-  def parse_stmt(self) -> list | Stmt:
+  def parse_stmt(self) -> list[Block]| list[Stmt]:
     """
-      stmt: scope
-          | declaration_stmt
+      stmt: blcok
+          | variable_declaration_stmt
           | assignment_stmt
     """
     if self._tk().type == TokenType.OPEN_BRACE:
-      return self.parse_scope()
+      return [self.parse_block()]
     elif self._tk().type == TokenType.LET:
-      return self.parse_declaration_stmt(False)
+      return self.parse_variable_declaration_stmt(False)
     elif self._tk().type == TokenType.CONST:
-      return self.parse_declaration_stmt(True)
+      return self.parse_variable_declaration_stmt(True)
     else:
       return self.parse_assignment_stmt()
   
-  def parse_declaration_stmt(self, const: bool) -> DeclarationStmt:
+  def parse_variable_declaration_stmt(self, const: bool) -> list[Stmt]:
     """
-      declaration: LET identifier EQUALS expr
+      variable_declaration_stmt: (LET | CONST) assignment_stmt
     """
-    self._eat(TokenType.LET)
-    left = self.parse_variable_factor()
-    self._eat(TokenType.EQUALS)
-    right = self.parse_expr()
+    const = False
+    if self._tk().type == TokenType.LET:
+      self._eat(TokenType.LET)
+    else:
+      self._eat(TokenType.CONST)
+      const = True
+    
+    stmt_list = self.parse_assignment_stmt()
+    result = []
 
-    return DeclarationStmt(left, right, const)
+    for stmt in stmt_list:
+      if type(stmt) == AssignmentStmt:
+        stmt = cast(AssignmentStmt, stmt)
+        result.append(VariableDeclarationStmt(stmt.left, stmt.right, const))
+      else:
+        stmt = cast(Expr, stmt)
+        result.append(VariableDeclarationStmt(stmt, NullFactor(), const))
+    
+    return result # list[VariableDeclarationStmt]
 
-  def parse_assignment_stmt(self) -> AssignmentStmt | Expr:
+  def parse_assignment_stmt(self) -> list[Stmt]:
     """
-      assignment: expr (EQUALS expr)?
+      assignment_stmt: expr (EQUALS expr)* (COMMA assignment_stmt)*
     """
+    result = []
     left = self.parse_expr()
 
     if self._tk().type == TokenType.EQUALS:
-      self._eat(TokenType.EQUALS)
-      right = self.parse_expr()
-      return AssignmentStmt(left, right)
+      right = NullFactor()
+      while self._tk().type == TokenType.EQUALS:
+        self._eat(TokenType.EQUALS)
+        right = self.parse_expr()
+      result.append(AssignmentStmt(left, right))
     else:
-      return left
+      result.append(left)
+
+    if self._tk().type == TokenType.COMMA:
+      self._eat(TokenType.COMMA)
+      result += self.parse_assignment_stmt()
+    
+    return result # list[AssignmentStmt | Expr]
 
   def parse_expr(self) -> Expr:
     """
