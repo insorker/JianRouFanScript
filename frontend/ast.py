@@ -2,6 +2,8 @@ from enum import Enum, auto
 
 
 class NodeType(Enum):
+  # scope
+  SCOPE = auto()
   PROGRAM = auto()
   # statement
   STMT = auto()
@@ -16,14 +18,27 @@ class NodeType(Enum):
   VARIABLE_FACTOR = auto()
   NULL_FACTOR = auto()
 
-class Program:
+class Scope:
+  def __init__(self) -> None:
+    self.type = NodeType.SCOPE
+    self.body: list = []
+
+  def __repr__(self, indent) -> str:
+    res = indent * '\t' + '{'
+    res += '\n' + (indent + 1) * '\t' + self.type.name + ','
+    for stmt in self.body:
+      res += '\n' + stmt.__repr__(indent + 1)
+    res += '\n' + indent * '\t' + '}'
+    return res
+
+class Program(Scope):
   def __init__(self) -> None:
     self.type = NodeType.PROGRAM
     self.body: list = []
   
   def __repr__(self) -> str:
     res = '{'
-    res += '\n\t' + self.type.name + ','
+    res += '\n' + '\t' + self.type.name + ','
     for stmt in self.body:
       res += '\n' + stmt.__repr__(1)
     res += '\n}'

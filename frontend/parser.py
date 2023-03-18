@@ -1,5 +1,5 @@
 from typing import cast
-from .ast import AssignmentStmt, BinaryExpr, DeclarationStmt, Expr, VariableFactor, NullFactor, NumberFactor, Program, Stmt
+from .ast import AssignmentStmt, BinaryExpr, DeclarationStmt, Expr, Scope, VariableFactor, NullFactor, NumberFactor, Program, Stmt
 from .lexer import Token, TokenType, tokenize
 
 
@@ -35,14 +35,15 @@ class Parser:
     
     return program
   
-  def parse_scope(self) -> list:
+  def parse_scope(self) -> Scope:
     """
       scope: OPEN_BRACE stmt_list CLOSE_BRACE
     """
+    scope = Scope()
     self._eat(TokenType.OPEN_BRACE)
-    node = self.parse_stmt_list()
+    scope.body += self.parse_stmt_list()
     self._eat(TokenType.CLOSE_BRACE)
-    return node
+    return scope
 
   def parse_stmt_list(self) -> list:
     """
@@ -57,7 +58,7 @@ class Parser:
 
     return node
 
-  def parse_stmt(self) -> list | Stmt:
+  def parse_stmt(self) -> Scope | Stmt:
     """
       stmt: scope
           | declaration_stmt

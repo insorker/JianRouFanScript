@@ -7,11 +7,11 @@ from backend.evaluator.expression import eval_expr
 from typing import cast
 
 
-def eval_scope(scope: list, env: Environment) -> Value | None:
+def eval_scope(scope: Ast.Scope, env: Environment) -> Value | None:
   result = None
 
-  for stmt in scope:
-    if type(stmt) == list:
+  for stmt in scope.body:
+    if type(stmt) == Ast.Scope:
       nested_env = Environment(env)
       result = eval_scope(stmt, nested_env)
     else:

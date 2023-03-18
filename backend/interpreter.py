@@ -10,4 +10,4 @@ class Interpreter:
     self.env = Environment()
 
   def interpret(self, program: Ast.Program) -> Value | None:
-    return eval_scope(program.body, self.env)
+    return eval_scope(program, self.env)
