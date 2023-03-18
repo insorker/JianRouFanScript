@@ -47,8 +47,7 @@ class Parser:
 
   def parse_stmt_list(self) -> list:
     """
-      stmt_list: stmt
-               | stmt (SEMICOLON stmt)*
+      stmt_list: stmt (SEMICOLON stmt)*
     """
     node = [ self.parse_stmt() ]
 
@@ -75,24 +74,34 @@ class Parser:
   
   def parse_declaration_stmt(self, const: bool) -> DeclarationStmt:
     """
-      declaration: LET identifier EQUALS expr
+      declaration: (LET | CONST) assignment
     """
-    self._eat(TokenType.LET)
-    left = self.parse_variable_factor()
-    self._eat(TokenType.EQUALS)
-    right = self.parse_expr()
-
-    return DeclarationStmt(left, right, const)
+    const = False
+    if self._tk().type == TokenType.LET:
+      self._eat(TokenType.LET)
+    else:
+      self._eat(TokenType.CONST)
+      const = True
+    
+    result = self.parse_assignment_stmt()
+    if type(result) == AssignmentStmt:
+      result = cast(AssignmentStmt, result)
+      return DeclarationStmt(result.left, result.right, const)
+    else:
+      result = cast(Expr, result)
+      return DeclarationStmt(result, NullFactor(), const)
 
   def parse_assignment_stmt(self) -> AssignmentStmt | Expr:
     """
-      assignment: expr (EQUALS expr)?
+      assignment: expr (EQUALS expr)*
     """
     left = self.parse_expr()
 
     if self._tk().type == TokenType.EQUALS:
-      self._eat(TokenType.EQUALS)
-      right = self.parse_expr()
+      right = NullFactor()
+      while self._tk().type == TokenType.EQUALS:
+        self._eat(TokenType.EQUALS)
+        right = self.parse_expr()
       return AssignmentStmt(left, right)
     else:
       return left

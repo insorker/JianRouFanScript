@@ -3,6 +3,8 @@ let x = 1
   x = 4
   let y = 5; let z = 7; x = z - y
   let x = 5;
+  x = y = z;
+  let a = y = z
   { {
     x = 100000 }
   }
