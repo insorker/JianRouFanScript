@@ -23,10 +23,10 @@ def run():
     interpreter = backend.Interpreter()
 
     program = parser.parse(f.read())
-    # result = interpreter.interpret(program)
+    result = interpreter.interpret(program)
 
     print(program)
-    # print(result)
+    print(result)
 
 if __name__ == '__main__':
   run()

@@ -19,6 +19,7 @@ class TokenType(Enum):
   OPEN_BRACE = auto()
   CLOSE_BRACE = auto()
   SEMICOLON = auto()
+  COMMA = auto()
 
   SPACE = auto()
   EOF = auto()
@@ -36,6 +37,7 @@ TOKEN_REGEX = {
   TokenType.CLOSE_PAREN: r'\)',
   TokenType.OPEN_BRACE: r'{',
   TokenType.CLOSE_BRACE: r'}',
+  TokenType.COMMA: r',',
   TokenType.SEMICOLON: r'[;\n]',
   TokenType.SPACE: r'[ \t\r]',
 }

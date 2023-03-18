@@ -7,7 +7,7 @@ class NodeType(Enum):
   PROGRAM = auto()
   # statement
   STMT = auto()
-  DECLARATION_STMT = auto()
+  VARIABLE_DECLARATION_STMT = auto()
   ASSIGNMENT_STMT = auto()
   # expression
   EXPR = auto()
@@ -59,9 +59,9 @@ class Factor(Expr):
   def __init__(self) -> None:
     self.type = NodeType.FACTOR
 
-class DeclarationStmt(Stmt):
+class VariableDeclarationStmt(Stmt):
   def __init__(self, left: Expr, right: Expr, const: bool) -> None:
-    self.type = NodeType.DECLARATION_STMT
+    self.type = NodeType.VARIABLE_DECLARATION_STMT
     self.left: Expr = left
     self.right: Expr = right
     self.const: bool = const
