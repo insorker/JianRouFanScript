@@ -5,11 +5,12 @@ import re
 class TokenType(Enum):
   LET = auto()
   CONST = auto()
+  COMMENT = auto()
 
   NUMBER = auto()
   IDENTIFIER = auto()
   STRING = auto()
-
+  
   OPERATER = auto()
   EQUALS = auto()
 
@@ -25,6 +26,7 @@ class TokenType(Enum):
 TOKEN_REGEX = {
   TokenType.LET: r'let',
   TokenType.CONST: r'const',
+  TokenType.COMMENT: r'//[^\n]*',
   TokenType.NUMBER: r'[1-9]+[0-9]*|0',
   TokenType.IDENTIFIER: r'[a-zA-Z_]+[a-zA-Z_0-9]*',
   TokenType.STRING: r'".*?"',
@@ -59,11 +61,14 @@ def tokenize(code: str) -> list[Token]:
         code = code[len(value):]
 
         if tokentype == TokenType.SPACE:
-          continue
+          pass
+        elif tokentype == TokenType.COMMENT:
+          pass
         elif tokentype == TokenType.STRING:
           tokens.append(Token(tokentype, value[1:-1]))
         else:
           tokens.append(Token(tokentype, value))
+        
         break
 
     if match == None:

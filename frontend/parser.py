@@ -1,5 +1,5 @@
 from typing import cast
-from .ast import AssignmentStmt, BinaryExpr, DeclarationStmt, Expr, Scope, VariableFactor, NullFactor, NumberFactor, Program, Stmt
+from .ast import AssignmentStmt, BinaryExpr, DeclarationStmt, Expr, Block, VariableFactor, NullFactor, NumberFactor, Program, Stmt
 from .lexer import Token, TokenType, tokenize
 
 
@@ -23,23 +23,23 @@ class Parser:
 
   def parse_program(self) -> Program:
     """
-      program: (scope | stmt_list)*
+      program: (block | stmt_list)*
     """
     program: Program = Program()
 
     while self._tk().type != TokenType.EOF:
       if self._tk().type == TokenType.OPEN_BRACE:
-        program.body.append(self.parse_scope())
+        program.body.append(self.parse_block())
       else:
         program.body += self.parse_stmt_list()
     
     return program
   
-  def parse_scope(self) -> Scope:
+  def parse_block(self) -> Block:
     """
-      scope: OPEN_BRACE stmt_list CLOSE_BRACE
+      block: OPEN_BRACE stmt_list CLOSE_BRACE
     """
-    scope = Scope()
+    scope = Block()
     self._eat(TokenType.OPEN_BRACE)
     scope.body += self.parse_stmt_list()
     self._eat(TokenType.CLOSE_BRACE)
@@ -57,14 +57,14 @@ class Parser:
 
     return node
 
-  def parse_stmt(self) -> Scope | Stmt:
+  def parse_stmt(self) -> Block | Stmt:
     """
-      stmt: scope
+      stmt: blcok
           | declaration_stmt
           | assignment_stmt
     """
     if self._tk().type == TokenType.OPEN_BRACE:
-      return self.parse_scope()
+      return self.parse_block()
     elif self._tk().type == TokenType.LET:
       return self.parse_declaration_stmt(False)
     elif self._tk().type == TokenType.CONST:

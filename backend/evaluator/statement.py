@@ -7,13 +7,13 @@ from backend.evaluator.expression import eval_expr
 from typing import cast
 
 
-def eval_scope(scope: Ast.Scope, env: Environment) -> Value | None:
+def eval_block(scope: Ast.Block, env: Environment) -> Value | None:
   result = None
 
   for stmt in scope.body:
-    if type(stmt) == Ast.Scope:
+    if type(stmt) == Ast.Block:
       nested_env = Environment(env)
-      result = eval_scope(stmt, nested_env)
+      result = eval_block(stmt, nested_env)
     else:
       result = eval_stmt(stmt, env)
 

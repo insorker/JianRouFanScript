@@ -1,7 +1,7 @@
 from frontend import *
 
 from backend.value import Value
-from backend.evaluator import eval_scope
+from backend.evaluator import eval_block
 from backend.environment import Environment
 
 
@@ -10,4 +10,4 @@ class Interpreter:
     self.env = Environment()
 
   def interpret(self, program: Ast.Program) -> Value | None:
-    return eval_scope(program, self.env)
+    return eval_block(program, self.env)
