@@ -8,6 +8,9 @@ class Environment:
     self.variables: dict[str, Value] = dict()
     self.constants: set[str] = set()
 
+  def __repr__(self) -> str:
+    return str(self.variables)
+
   def _resolve(self, varname: str) -> Environment:
     if varname in self.variables:
       return self

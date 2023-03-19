@@ -8,9 +8,9 @@ class NodeType(Enum):
   # statement
   STMT = auto()
   VARIABLE_DECLARATION_STMT = auto()
-  ASSIGNMENT_STMT = auto()
   # expression
   EXPR = auto()
+  ASSIGNMENT_EXPR = auto()
   BINARY_EXPR = auto()
   # factor
   FACTOR = auto()
@@ -66,9 +66,9 @@ class VariableDeclarationStmt(Stmt):
     self.right: Expr = right
     self.const: bool = const
 
-class AssignmentStmt(Stmt):
+class AssignmentExpr(Expr):
   def __init__(self, left: Expr, right: Expr) -> None:
-    self.type = NodeType.ASSIGNMENT_STMT
+    self.type = NodeType.ASSIGNMENT_EXPR
     self.left: Expr = left
     self.right: Expr = right
 

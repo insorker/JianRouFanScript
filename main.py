@@ -29,5 +29,5 @@ def run():
     print(result)
 
 if __name__ == '__main__':
-  run()
-  # repl()
+  # run()
+  repl()
