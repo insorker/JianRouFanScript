@@ -1,113 +1,119 @@
-from enum import Enum, auto
+from typing import Union
+from symbol.builtintype import BuiltinType
 
 
-class NodeType(Enum):
-  # BLOCK
-  BLOCK = auto()
-  PROGRAM = auto()
-  # statement
-  STMT = auto()
-  VARIABLE_DECLARATION_STMT = auto()
-  # expression
-  EXPR = auto()
-  ASSIGNMENT_EXPR = auto()
-  BINARY_EXPR = auto()
-  # factor
-  FACTOR = auto()
-  NUMBER_FACTOR = auto()
-  VARIABLE_FACTOR = auto()
-  NULL_FACTOR = auto()
+class AstNode:
+  def node_type(self) -> str:
+    """return class name"""
+    return type(self).__name__
 
-class Block:
+  def _tab(self, level: int) -> str:
+    return '  ' * level
+
+  def __repr__(self, indent: int) -> str:
+    return f'{self._tab(indent)}{{ {self.node_type()} }}'
+
+
+class Block(AstNode):
   def __init__(self) -> None:
-    self.type = NodeType.BLOCK
     self.body: list = []
 
-  def __repr__(self, indent) -> str:
-    res = indent * '\t' + '{'
-    res += '\n' + (indent + 1) * '\t' + self.type.name + ','
-    for stmt in self.body:
-      res += '\n' + stmt.__repr__(indent + 1)
-    res += '\n' + indent * '\t' + '}'
+  def __repr__(self, indent: int) -> str:
+    res = f'{self._tab(indent)}{{'
+    res += f'\n{self._tab(indent+1)}{self.node_type()},'
+    res += f'\n{chr(10).join([stmt.__repr__(indent+1) for stmt in self.body])}'
+    res += f'\n{self._tab(indent)}}}'
     return res
+
 
 class Program(Block):
   def __init__(self) -> None:
-    self.type = NodeType.PROGRAM
     self.body: list = []
   
   def __repr__(self) -> str:
-    res = '{'
-    res += '\n' + '\t' + self.type.name + ','
-    for stmt in self.body:
-      res += '\n' + stmt.__repr__(1)
-    res += '\n}'
-    return res
+    return super().__repr__(0)
 
-class Stmt:
-  def __init__(self) -> None:
-    self.type = NodeType.STMT
-  
-  def __repr__(self, depth) -> str:
-    return '\t' * depth + f'{self.type.name}'
-  
+
+class Stmt(AstNode):
+  pass
+
+
 class Expr(Stmt):
-  def __init__(self) -> None:
-    self.type = NodeType.EXPR
+  pass
+
 
 class Factor(Expr):
-  def __init__(self) -> None:
-    self.type = NodeType.FACTOR
+  def __init__(self, type: BuiltinType) -> None:
+    self.type: BuiltinType = type
 
-class VariableDeclarationStmt(Stmt):
+
+class VarDeclarationStmt(Stmt):
   def __init__(self, left: Expr, right: Expr, const: bool) -> None:
-    self.type = NodeType.VARIABLE_DECLARATION_STMT
     self.left: Expr = left
     self.right: Expr = right
     self.const: bool = const
 
+  def __repr__(self, indent: int) -> str:
+    res = f'{self._tab(indent)}{{'
+    res += f'\n{self._tab(indent+1)}{self.node_type()},'
+    res += f'\n{self.left.__repr__(indent+1)},'
+    res += f'\n{self.right.__repr__(indent+1)},'
+    res += f'\n{self._tab(indent+1)}{{ const: {self.const} }},'
+    res += f'\n{self._tab(indent)}}}'
+    return res
+
+
 class AssignmentExpr(Expr):
   def __init__(self, left: Expr, right: Expr) -> None:
-    self.type = NodeType.ASSIGNMENT_EXPR
     self.left: Expr = left
     self.right: Expr = right
+  
+  def __repr__(self, indent: int) -> str:
+    res = f'{self._tab(indent)}{{'
+    res += f'\n{self._tab(indent+1)}{self.node_type()},'
+    res += f'\n{self.left.__repr__(indent+1)},'
+    res += f'\n{self.right.__repr__(indent+1)},'
+    res += f'\n{self._tab(indent)}}}'
+    return res
+
 
 class BinaryExpr(Expr):
   def __init__(self, left: Expr, right: Expr, operator: str) -> None:
-    self.type = NodeType.BINARY_EXPR
     self.left: Expr = left
     self.right: Expr = right
     self.operator: str = operator
   
-  def __repr__(self, depth) -> str:
-    res = depth * '\t' + '{'
-    res += '\n' + (depth + 1) * '\t' + self.type.name + ','
-    res += '\n' + self.left.__repr__(depth+1) + ','
-    res += '\n' + (depth + 1) * '\t' + self.operator + ','
-    res += '\n' + self.right.__repr__(depth+1) + ','
-    res += '\n' + depth * '\t' + '}'
-
+  def __repr__(self, indent) -> str:
+    res = f'{self._tab(indent)}{{'
+    res += f'\n{self._tab(indent+1)}{self.node_type()},'
+    res += f'\n{self.left.__repr__(indent+1)},'
+    res += f'\n{self._tab(indent+1)}{{ operator: {self.operator} }},'
+    res += f'\n{self.right.__repr__(indent+1)},'
+    res += f'\n{self._tab(indent)}}}'
     return res
 
-class NumberFactor(Factor):
-  def __init__(self, value: int) -> None:
-    self.type = NodeType.NUMBER_FACTOR
-    self.value: int = value
-  
-  def __repr__(self, depth) -> str:
-    return depth * '\t' + f'{{ {self.type.name}, {self.value} }}'
 
-class VariableFactor(Factor):
-  def __init__(self, symbol: str) -> None:
-    self.type = NodeType.VARIABLE_FACTOR
-    self.symbol: str = symbol
+class NumberFactor(Factor):
+  def __init__(self, type: BuiltinType, value: Union[int, float]) -> None:
+    super().__init__(type)
+    self.value: Union[int, float] = value
   
-  def __repr__(self, depth) -> str:
-    return depth * '\t' + f'{{ {self.type.name}, {self.symbol} }}'
+  def __repr__(self, indent) -> str:
+    return f'{self._tab(indent)}{{ {self.node_type()}, {self.value} }}'
+
+
+class VarFactor(Factor):
+  def __init__(self, type: BuiltinType, name: str) -> None:
+    super().__init__(type)
+    self.name: str = name
+  
+  def __repr__(self, indent) -> str:
+    return f'{self._tab(indent)}{{ {self.node_type()}, {self.name} }}'
+
 
 class NullFactor(Factor):
   def __init__(self) -> None:
-    self.type = NodeType.NULL_FACTOR
+    super().__init__(BuiltinType.NULL)
   
-  def __repr__(self, depth) -> str:
-    return depth * '\t' + f'{{ {self.type.name} }}'
+  def __repr__(self, indent) -> str:
+    return f'{self._tab(indent)}{{ {self.node_type()} }}'

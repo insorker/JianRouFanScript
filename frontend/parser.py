@@ -1,5 +1,7 @@
 from typing import cast
-from .ast import AssignmentExpr, BinaryExpr, VariableDeclarationStmt, Expr, Block, VariableFactor, NullFactor, NumberFactor, Program, Stmt
+
+from symbol.builtintype import BuiltinType
+from .ast import AssignmentExpr, BinaryExpr, VarDeclarationStmt, Expr, Block, VarFactor, NullFactor, NumberFactor, Program, Stmt
 from .lexer import Token, TokenType, tokenize
 
 
@@ -8,15 +10,20 @@ class Parser:
     self.tokens: list[Token] = []
 
   def _tk(self) -> Token:
-    """return current token in parser"""
+    """return current token"""
     return self.tokens[0]
 
-  def _eat(self, tokentype: TokenType) -> Token:
+  def _eat(self, tokentype: TokenType | None) -> Token:
+    """eat and return current token if type matches"""
+    if tokentype == None:
+      return self.tokens.pop(0)
     if self._tk().type == tokentype:
       return self.tokens.pop(0)
+    
     raise Exception(__file__, f'Token {tokentype.name} not found.')
 
   def parse(self, code: str) -> Program:
+    """return the ast of code"""
     self.tokens = tokenize(code)
 
     return self.parse_program()
@@ -84,9 +91,9 @@ class Parser:
     for expr in expr_list:
       if type(expr) == AssignmentExpr:
         expr = cast(AssignmentExpr, expr)
-        result.append(VariableDeclarationStmt(expr.left, expr.right, const))
+        result.append(VarDeclarationStmt(expr.left, expr.right, const))
       else:
-        result.append(VariableDeclarationStmt(expr, NullFactor(), const))
+        result.append(VarDeclarationStmt(expr, NullFactor(), const))
     
     return result # list[VariableDeclarationStmt]
 
@@ -175,33 +182,29 @@ class Parser:
   def parse_factor(self) -> Expr:
     """
       factor: (PLUS | MINUS) factor
-            | number_factor
-            | variable_factor
+            | INTEGER
+            | FLOAT
+            | IDENTIFIER
             | OPEN_PAREN expr CLOSE_PAREN
     """
     if self._tk().type == TokenType.OPERATER \
       and (self._tk().value == '+' or self._tk().value == '-'):
       return self.parse_unary_expr()
-    elif self._tk().type == TokenType.NUMBER:
-      return self.parse_number_factor()
+    
+    elif self._tk().type == TokenType.INTEGER:
+      return NumberFactor(BuiltinType.INTEGER, int(self._eat(None).value))
+    
+    elif self._tk().type == TokenType.FLOAT:
+      return NumberFactor(BuiltinType.FLOAT, int(self._eat(None).value))
+    
     elif self._tk().type == TokenType.IDENTIFIER:
-      return self.parse_variable_factor()
+      return VarFactor(BuiltinType.ANY, self._eat(None).value)
+    
     elif self._tk().type == TokenType.OPEN_PAREN:
       self._eat(TokenType.OPEN_PAREN)
       value = self.parse_expr()
       self._eat(TokenType.CLOSE_PAREN)
       return value
+    
     else:
       return NullFactor()
-    
-  def parse_number_factor(self) -> NumberFactor:
-    """
-      number_factor: NUMBER
-    """
-    return NumberFactor(int(self._eat(TokenType.NUMBER).value))
-
-  def parse_variable_factor(self) -> VariableFactor:
-    """
-      variable_factor: IDENTIFIER
-    """
-    return VariableFactor(self._eat(TokenType.IDENTIFIER).value)
