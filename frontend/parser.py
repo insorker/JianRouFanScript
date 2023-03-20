@@ -1,6 +1,6 @@
 from typing import cast
 from frontend.ast import *
-from frontend.analyzer.lexer import Token, TokenType
+from frontend.lexer import Token, TokenType
 
 
 class Parser:
