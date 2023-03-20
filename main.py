@@ -1,12 +1,12 @@
 import frontend
-from symtab.symboltablebuilder import SymbolTableBuilder
 # import backend
 
 
 def repl():
   print('JRF - v0.2.0')
+  lexer = frontend.Lexer()
   parser = frontend.Parser()
-  symtab_builder = SymbolTableBuilder()
+  semantic_analyzer = frontend.SemanticAnalyzer()
   # interpreter = backend.Interpreter()
 
   while True:  
@@ -14,8 +14,9 @@ def repl():
     if code == 'exit':
       return
 
-    program = parser.parse(code)
-    program = symtab_builder.visit_Program(program)
+    tokens = lexer.tokenize(code)
+    program = parser.parse(tokens)
+    program = semantic_analyzer.visit(program)
     # result = interpreter.interpret(program)
 
     print(program)
