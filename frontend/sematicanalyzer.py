@@ -28,6 +28,14 @@ class SemanticAnalyzer(NodeVisitor):
     else:
       raise SemanticError(f'Cannot assign to {stmt.left.node_type()} here.')
     
+  def visit_FnDeclarationStmt(self, stmt: FnDeclarationStmt):
+    pass
+  #   if type(stmt.left) == VarFactor:
+  #     var = cast(VarFactor, stmt.left)
+  #     self._symtab.declare(VarSymbol(var.name, var.type, Value(), stmt.const))
+  #   else:
+  #     raise SemanticError(f'Cannot assign to {stmt.left.node_type()} here.')
+    
   def visit_AssignmentExpr(self, expr: AssignmentExpr):
     if type(expr.left) == VarFactor:
       self.visit(expr.left)
@@ -38,6 +46,10 @@ class SemanticAnalyzer(NodeVisitor):
   def visit_BinaryExpr(self, expr: BinaryExpr):
     self.visit(expr.left)
     self.visit(expr.right)
+
+  def visit_FnCallFactor(self, factor: FnCallFactor):
+    for param in factor.params:
+      self.visit(param)
 
   def visit_VarFactor(self, factor: VarFactor):
     self._symtab.lookup(factor.name)

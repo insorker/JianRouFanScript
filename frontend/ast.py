@@ -56,7 +56,7 @@ class VarDeclarationStmt(Stmt):
     return res
   
 
-class FunctionStmt(AstNode):
+class FnDeclarationStmt(Stmt):
   def __init__(self, name: str, params: list[VarFactor], block: Block) -> None:
     super().__init__()
     self.name = name
@@ -70,7 +70,8 @@ class FunctionStmt(AstNode):
     res += f'\n{self._tab(indent+1)}'
     for param in self.params:
       res += f'\n{param.__repr__(indent+1)},'
-    res += f'\n{self.block.__repr__(indent+1)},'
+    res += f'\n{self.block.__repr__(indent+1)}'
+    res += f'\n{self._tab(indent)}}}'
     return res
 
 
@@ -134,6 +135,22 @@ class FloatFactor(Factor):
     return f'{self._tab(indent)}{{ {self.node_type()}, {self.value} }}'
 
 
+class FnCallFactor(Factor):
+  def __init__(self, name: str, params: list[VarFactor]) -> None:
+    super().__init__(Function.__name__)
+    self.name = name
+    self.params = params
+
+  def __repr__(self, indent: int) -> str:
+    res = f'{self._tab(indent)}{{'
+    res += f'\n{self._tab(indent+1)}{self.node_type()},'
+    res += f'\n{self._tab(indent+1)}name: {self.name},'
+    for param in self.params:
+      res += f'\n{param.__repr__(indent+1)}'
+    res += f'\n{self._tab(indent)}}}'
+    return res
+
+
 class VarFactor(Factor):
   def __init__(self, type: str, name: str) -> None:
     super().__init__(type)
@@ -188,6 +205,9 @@ class NodeVisitor:
     pass
 
   def visit_FloatFactor(self, factor: FloatFactor):
+    pass
+
+  def visit_FnCallFactor(self, factor: FnCallFactor):
     pass
 
   def visit_VarFactor(self, factor: VarFactor):
