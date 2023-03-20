@@ -145,7 +145,7 @@ class VarFactor(Factor):
 
 class UndefinedFactor(Factor):
   def __init__(self) -> None:
-    super().__init__(Null.__name__)
+    super().__init__(Undefined.__name__)
     self.value: Undefined = Undefined()
 
 
@@ -154,6 +154,11 @@ class NullFactor(Factor):
     super().__init__(Null.__name__)
     self.value: Null = Null()
   
+
+class NopFactor(Factor):
+  def __init__(self) -> None:
+    super().__init__('')
+
 
 class NodeVisitor:
   def visit(self, node: AstNode):
@@ -189,6 +194,9 @@ class NodeVisitor:
     pass
 
   def visit_NullFactor(self, factor: NullFactor):
+    pass
+
+  def visit_NopFactor(self, factor: NopFactor):
     pass
 
   def visit_error(self, node: AstNode):

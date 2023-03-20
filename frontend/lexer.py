@@ -90,6 +90,7 @@ class Lexer:
             pass
           elif tokentype == TokenType.SEMICOLON and value == '\n':
             self.lineno += 1
+            tokens.append(Token(tokentype, value, self.lineno))
           elif tokentype == TokenType.STRING:
             tokens.append(Token(tokentype, value[1:-1], self.lineno))
           else:

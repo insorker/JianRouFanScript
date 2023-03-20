@@ -19,7 +19,7 @@ class Parser:
     if self._tk().type == tokentype:
       return self.tokens.pop(0)
     
-    raise ParserError(f'Token type {tokentype.name} not found. Find {self._tk()}.')
+    raise ParserError(f'{tokentype} not found, find {self._tk()} instead, line {self._tk().lineno}')
 
   def parse(self, tokens: list[Token]) -> Program:
     """return the ast of code"""
@@ -195,6 +195,7 @@ class Parser:
             | FLOAT
             | var_factor
             | OPEN_PAREN expr CLOSE_PAREN
+            | nop_factor
     """
     if self._tk().type == TokenType.INTEGER:
       return IntegerFactor(Integer(int(self._eat(None).value)))
@@ -212,8 +213,11 @@ class Parser:
       return value
     
     else:
-      return NullFactor()
+      return self.parse_nop()
 
   def parse_var_factor(self) -> VarFactor:
     """var_factor: IDENTIFIER"""
     return VarFactor(Any.__name__, self._eat(TokenType.IDENTIFIER).value)
+  
+  def parse_nop(self) -> NopFactor:
+    return NopFactor()
