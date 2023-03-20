@@ -1,23 +1,29 @@
 from typing import cast
-from .ast import AssignmentStmt, BinaryExpr, VariableDeclarationStmt, Expr, Block, VariableFactor, NullFactor, NumberFactor, Program, Stmt
-from .lexer import Token, TokenType, tokenize
+from frontend.ast import *
+from frontend.lexer import Token, TokenType
+from common.error import ParserError
 
 
 class Parser:
   def __init__(self) -> None:
     self.tokens: list[Token] = []
 
-  def _tk(self) -> Token:
-    """return current token in parser"""
-    return self.tokens[0]
+  def _tk(self, bias=0) -> Token:
+    """return current token"""
+    return self.tokens[bias]
 
-  def _eat(self, tokentype: TokenType) -> Token:
+  def _eat(self, tokentype: TokenType | None) -> Token:
+    """eat and return current token if type matches"""
+    if tokentype == None:
+      return self.tokens.pop(0)
     if self._tk().type == tokentype:
       return self.tokens.pop(0)
-    raise Exception(__file__, f'Token {tokentype.name} not found.')
+    
+    raise ParserError(f'{tokentype} not found, find {self._tk()} instead, line {self._tk().lineno}')
 
-  def parse(self, code: str) -> Program:
-    self.tokens = tokenize(code)
+  def parse(self, tokens: list[Token]) -> Program:
+    """return the ast of code"""
+    self.tokens = tokens
 
     return self.parse_program()
 
@@ -39,11 +45,11 @@ class Parser:
     """
       block: OPEN_BRACE stmt_list CLOSE_BRACE
     """
-    scope = Block()
+    block = Block()
     self._eat(TokenType.OPEN_BRACE)
-    scope.body += self.parse_stmt_list()
+    block.body += self.parse_stmt_list()
     self._eat(TokenType.CLOSE_BRACE)
-    return scope
+    return block
 
   def parse_stmt_list(self) -> list:
     """
@@ -57,79 +63,100 @@ class Parser:
 
     return node
 
-  def parse_stmt(self) -> list[Block]| list[Stmt]:
+  def parse_stmt(self) -> list[Block] | list[Stmt] | list[Expr]:
     """
       stmt: blcok
-          | variable_declaration_stmt
-          | assignment_stmt
+          | fn_dclaration_stmt
+          | var_declaration_stmt
+          | assignment_expr
     """
     if self._tk().type == TokenType.OPEN_BRACE:
       return [self.parse_block()]
+    elif self._tk().type == TokenType.FUNCTION:
+      return [self.parse_fn_dclaration_stmt()]
     elif self._tk().type == TokenType.LET:
-      return self.parse_variable_declaration_stmt(False)
+      return self.parse_var_declaration_stmt(False)
     elif self._tk().type == TokenType.CONST:
-      return self.parse_variable_declaration_stmt(True)
+      return self.parse_var_declaration_stmt(True)
     else:
-      return self.parse_assignment_stmt()
+      return self.parse_assignment_expr()
   
-  def parse_variable_declaration_stmt(self, const: bool) -> list[Stmt]:
+  def parse_var_declaration_stmt(self, const: bool) -> list[Stmt]:
     """
-      variable_declaration_stmt: (LET | CONST) assignment_stmt
+      var_declaration_stmt: (LET | CONST) assignment_stmt
     """
-    const = False
-    if self._tk().type == TokenType.LET:
-      self._eat(TokenType.LET)
-    else:
-      self._eat(TokenType.CONST)
-      const = True
+    self._eat(self._tk().type)
     
-    stmt_list = self.parse_assignment_stmt()
     result = []
+    expr_list = self.parse_assignment_expr()
 
-    for stmt in stmt_list:
-      if type(stmt) == AssignmentStmt:
-        stmt = cast(AssignmentStmt, stmt)
-        result.append(VariableDeclarationStmt(stmt.left, stmt.right, const))
+    for expr in expr_list:
+      if type(expr) == AssignmentExpr:
+        expr = cast(AssignmentExpr, expr)
+        result.append(VarDeclarationStmt(expr.left, expr.right, const))
       else:
-        stmt = cast(Expr, stmt)
-        result.append(VariableDeclarationStmt(stmt, NullFactor(), const))
+        result.append(VarDeclarationStmt(expr, NullFactor(), const))
     
     return result # list[VariableDeclarationStmt]
 
-  def parse_assignment_stmt(self) -> list[Stmt]:
+  def parse_fn_dclaration_stmt(self) -> FnDeclarationStmt:
     """
-      assignment_stmt: expr (EQUALS expr)* (COMMA assignment_stmt)*
+      fn_declaration_stmt: FUNCTION IDENTIFIER  fn_params  block
     """
-    result = []
+    self._eat(TokenType.FUNCTION)
+    name = self._eat(TokenType.IDENTIFIER).value
+    params = self.parse_fn_params()
+    block = self.parse_block()
+
+    return FnDeclarationStmt(name, params, block)
+
+  def parse_fn_params(self) -> list[VarFactor]:
+    """
+      fn_params: OPEN_PAREN (var_factor (COMMA var_factor)*)? CLOSE_PAREN
+    """
+    self._eat(TokenType.OPEN_PAREN)
+    result = [ ]
+
+    if self._tk().type != TokenType.CLOSE_PAREN:
+      result.append(self.parse_var_factor())
+
+      while self._tk().type == TokenType.COMMA:
+        self._eat(TokenType.COMMA)
+        result.append(self.parse_var_factor())
+    
+    self._eat(TokenType.CLOSE_PAREN)
+    return result
+
+  def parse_single_assignment_expr(self) -> Expr:
+    """
+      single_assignment_expr: expr | expr EQUALS single_assignment_expr
+    """
     left = self.parse_expr()
 
-    if self._tk().type == TokenType.EQUALS:
-      right = NullFactor()
-      while self._tk().type == TokenType.EQUALS:
-        self._eat(TokenType.EQUALS)
-        right = self.parse_expr()
-      result.append(AssignmentStmt(left, right))
-    else:
-      result.append(left)
-
-    if self._tk().type == TokenType.COMMA:
-      self._eat(TokenType.COMMA)
-      result += self.parse_assignment_stmt()
+    while self._tk().type == TokenType.EQUALS:
+      self._eat(TokenType.EQUALS)
+      left = AssignmentExpr(left, self.parse_single_assignment_expr())
     
-    return result # list[AssignmentStmt | Expr]
+    return left
+
+  def parse_assignment_expr(self) -> list[Expr]:
+    """
+      assignment_stmt: single_assignment_expr (COMMA single_assignment_expr)*
+    """
+    result = [ self.parse_single_assignment_expr() ]
+
+    while self._tk().type == TokenType.COMMA:
+      self._eat(TokenType.COMMA)
+      result.append(self.parse_single_assignment_expr())
+    
+    return result
 
   def parse_expr(self) -> Expr:
-    """
-      expr: binary_expr
-    """
-    return self.parse_binary_expr()
-  
-  def parse_binary_expr(self) -> Expr:
     """
       expr: additive_expr
     """
     return self.parse_additive_expr()
-  
+
   def parse_additive_expr(self) -> Expr:
     """
       additive_expr: multiplicative_expr ((PLUS | MINUS) multiplicative_expr)*
@@ -156,56 +183,57 @@ class Parser:
     
     return left
   
-  def parse_unary_expr(self) -> Expr:
-    operator = self._eat(TokenType.OPERATER).value
-
-    if operator == '+' or operator == '-':
-      result = self.parse_factor()
-
-      if issubclass(result.__class__, NumberFactor):
-        if operator == '+':
-          result = cast(NumberFactor, result)
-          result.value = result.value
-        elif operator == '-':
-          result = cast(NumberFactor, result)
-          result.value = -result.value
-      else:
-        raise Exception(__file__, 'Not number factor.', result.__class__)
-    else:
-      raise Exception(__file__, 'Unknow unary expr.')
-
-    return result
-  
   def parse_factor(self) -> Expr:
     """
-      factor: (PLUS | MINUS) factor
-            | number_factor
-            | variable_factor
+      factor: INTEGER
+            | FLOAT
+            | fn_call_factor
+            | var_factor
             | OPEN_PAREN expr CLOSE_PAREN
+            | nop_factor
     """
-    if self._tk().type == TokenType.OPERATER \
-      and (self._tk().value == '+' or self._tk().value == '-'):
-      return self.parse_unary_expr()
-    elif self._tk().type == TokenType.NUMBER:
-      return self.parse_number_factor()
+    if self._tk().type == TokenType.INTEGER:
+      return IntegerFactor(Integer(int(self._eat(None).value)))
+    
+    elif self._tk().type == TokenType.FLOAT:
+      return FloatFactor(Float(int(self._eat(None).value)))
+    
+    elif self._tk(1).type == TokenType.OPEN_PAREN:
+      return self.parse_fn_call_factor()
+
     elif self._tk().type == TokenType.IDENTIFIER:
-      return self.parse_variable_factor()
+      return self.parse_var_factor()
+    
     elif self._tk().type == TokenType.OPEN_PAREN:
       self._eat(TokenType.OPEN_PAREN)
       value = self.parse_expr()
       self._eat(TokenType.CLOSE_PAREN)
       return value
-    else:
-      return NullFactor()
     
-  def parse_number_factor(self) -> NumberFactor:
+    else:
+      return self.parse_nop()
+      
+  def parse_fn_call_factor(self) -> Factor:
     """
-      number_factor: NUMBER
+      fn_call_factor: IDENTIFIER OPEN_PAREN (expr (COMMA expr)*)? CLOSE_PAREN
     """
-    return NumberFactor(int(self._eat(TokenType.NUMBER).value))
+    name = self._eat(TokenType.IDENTIFIER).value
+    params = []
 
-  def parse_variable_factor(self) -> VariableFactor:
-    """
-      variable_factor: IDENTIFIER
-    """
-    return VariableFactor(self._eat(TokenType.IDENTIFIER).value)
+    self._eat(TokenType.OPEN_PAREN)
+    if self._tk().type != TokenType.CLOSE_PAREN:
+      params.append(self.parse_expr())
+
+      while self._tk().type == TokenType.COMMA:
+        self._eat(TokenType.COMMA)
+        params.append(self.parse_expr())
+    
+    self._eat(TokenType.CLOSE_PAREN)
+    return FnCallFactor(name, params)
+
+  def parse_var_factor(self) -> VarFactor:
+    """var_factor: IDENTIFIER"""
+    return VarFactor(Any.__name__, self._eat(TokenType.IDENTIFIER).value)
+  
+  def parse_nop(self) -> NopFactor:
+    return NopFactor()
