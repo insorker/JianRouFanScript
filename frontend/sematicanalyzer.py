@@ -1,6 +1,7 @@
 from typing import cast
 from frontend.ast import *
 from common.symbol import VarSymbol, SymbolTable
+from common.error import SemanticError
 
 
 class SemanticAnalyzer(NodeVisitor):
@@ -25,14 +26,14 @@ class SemanticAnalyzer(NodeVisitor):
       var = cast(VarFactor, stmt.left)
       self._symtab.declare(VarSymbol(var.name, var.type, Value(), stmt.const))
     else:
-      raise Exception(f'Cannot assign to {stmt.left.node_type()} here.')
+      raise SemanticError(f'Cannot assign to {stmt.left.node_type()} here.')
     
   def visit_AssignmentExpr(self, expr: AssignmentExpr):
     if type(expr.left) == VarFactor:
       self.visit(expr.left)
       self.visit(expr.right)
     else:
-      raise Exception(f'Cannot assign to {expr.left.node_type()} here.')
+      raise SemanticError(f'Cannot assign to {expr.left.node_type()} here.')
 
   def visit_BinaryExpr(self, expr: BinaryExpr):
     self.visit(expr.left)

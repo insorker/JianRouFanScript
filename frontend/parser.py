@@ -1,6 +1,7 @@
 from typing import cast
 from frontend.ast import *
 from frontend.lexer import Token, TokenType
+from common.error import ParserError
 
 
 class Parser:
@@ -18,7 +19,7 @@ class Parser:
     if self._tk().type == tokentype:
       return self.tokens.pop(0)
     
-    raise Exception(__file__, f'Token {tokentype.name} not found.')
+    raise ParserError(f'Token type {tokentype.name} not found. Find {self._tk()}.')
 
   def parse(self, tokens: list[Token]) -> Program:
     """return the ast of code"""
@@ -115,7 +116,7 @@ class Parser:
     """
     self._eat(TokenType.OPEN_PAREN)
     result = [ ]
-    
+
     if self._tk().type != TokenType.CLOSE_PAREN:
       result.append(self.parse_var_factor())
 
