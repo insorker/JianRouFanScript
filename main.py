@@ -1,11 +1,13 @@
 import frontend
-import backend
+from symtab.symboltablebuilder import SymbolTableBuilder
+# import backend
 
 
 def repl():
   print('JRF - v0.2.0')
   parser = frontend.Parser()
-  interpreter = backend.Interpreter()
+  symtab_builder = SymbolTableBuilder()
+  # interpreter = backend.Interpreter()
 
   while True:  
     code = input('~ > ')
@@ -13,9 +15,13 @@ def repl():
       return
 
     program = parser.parse(code)
-    result = interpreter.interpret(program)
+    program = symtab_builder.visit_Program(program)
+    # result = interpreter.interpret(program)
 
-    print(result)
+    print(program)
+    print(program.symtab)
+    # print(program)
+    # print(result)
 
 def run():
   with open('main.jrf', 'r') as f:
