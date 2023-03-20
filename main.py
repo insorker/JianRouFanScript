@@ -18,11 +18,12 @@ def repl():
 
     tokens = lexer.tokenize(code)
     program = parser.parse(tokens)
-    semantic_analyzer.visit(program)
-    result = interpreter.interpret(program)
+    # semantic_analyzer.visit(program)
+    # result = interpreter.interpret(program)
 
+    
     print(program)
-    print(result)
+    # print(result)
 
 
 def run():
@@ -36,5 +37,5 @@ def run():
     print(result)
 
 if __name__ == '__main__':
-  run()
-  # repl()
+  # run()
+  repl()

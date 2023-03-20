@@ -62,24 +62,27 @@ class Parser:
 
     return node
 
-  def parse_stmt(self) -> list[Block] | list[Stmt] | list[Expr]:
+  def parse_stmt(self) -> list[Block] | list[Stmt] | list[Expr] | list[FunctionStmt]:
     """
       stmt: blcok
-          | variable_declaration_stmt
+          | fn_dclaration_stmt
+          | var_declaration_stmt
           | assignment_expr
     """
     if self._tk().type == TokenType.OPEN_BRACE:
       return [self.parse_block()]
+    elif self._tk().type == TokenType.FUNCTION:
+      return [self.parse_fn_dclaration_stmt()]
     elif self._tk().type == TokenType.LET:
-      return self.parse_variable_declaration_stmt(False)
+      return self.parse_var_declaration_stmt(False)
     elif self._tk().type == TokenType.CONST:
-      return self.parse_variable_declaration_stmt(True)
+      return self.parse_var_declaration_stmt(True)
     else:
       return self.parse_assignment_expr()
   
-  def parse_variable_declaration_stmt(self, const: bool) -> list[Stmt]:
+  def parse_var_declaration_stmt(self, const: bool) -> list[Stmt]:
     """
-      variable_declaration_stmt: (LET | CONST) assignment_stmt
+      var_declaration_stmt: (LET | CONST) assignment_stmt
     """
     self._eat(self._tk().type)
     
@@ -94,6 +97,34 @@ class Parser:
         result.append(VarDeclarationStmt(expr, NullFactor(), const))
     
     return result # list[VariableDeclarationStmt]
+
+  def parse_fn_dclaration_stmt(self) -> FunctionStmt:
+    """
+      fn_declaration_stmt: FUNCTION IDENTIFIER  fn_params  block
+    """
+    self._eat(TokenType.FUNCTION)
+    name = self._eat(TokenType.IDENTIFIER).value
+    params = self.parse_fn_params()
+    block = self.parse_block()
+
+    return FunctionStmt(name, params, block)
+
+  def parse_fn_params(self) -> list[VarFactor]:
+    """
+      fn_params: OPEN_PAREN var_factor? (COMMA var_factor)* CLOSE_PAREN
+    """
+    self._eat(TokenType.OPEN_PAREN)
+    result = [ ]
+    
+    if self._tk().type != TokenType.CLOSE_PAREN:
+      result.append(self.parse_var_factor())
+
+      while self._tk().type == TokenType.COMMA:
+        self._eat(TokenType.COMMA)
+        result.append(self.parse_var_factor())
+    
+    self._eat(TokenType.CLOSE_PAREN)
+    return result
 
   def parse_single_assignment_expr(self) -> Expr:
     """
@@ -161,7 +192,7 @@ class Parser:
     """
       factor: INTEGER
             | FLOAT
-            | IDENTIFIER
+            | var_factor
             | OPEN_PAREN expr CLOSE_PAREN
     """
     if self._tk().type == TokenType.INTEGER:
@@ -171,7 +202,7 @@ class Parser:
       return FloatFactor(Float(int(self._eat(None).value)))
     
     elif self._tk().type == TokenType.IDENTIFIER:
-      return VarFactor(Any.__name__, self._eat(None).value)
+      return self.parse_var_factor()
     
     elif self._tk().type == TokenType.OPEN_PAREN:
       self._eat(TokenType.OPEN_PAREN)
@@ -181,3 +212,7 @@ class Parser:
     
     else:
       return NullFactor()
+
+  def parse_var_factor(self) -> VarFactor:
+    """var_factor: IDENTIFIER"""
+    return VarFactor(Any.__name__, self._eat(TokenType.IDENTIFIER).value)

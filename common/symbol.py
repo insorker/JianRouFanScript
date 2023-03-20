@@ -20,6 +20,11 @@ class Symbol:
     self.value = value
   
 
+# class FnSymbol(Symbol):
+#   def __init__(self, name: str, type: str, params: Value) -> None:
+#     super().__init__(name, type, value)
+
+
 class VarSymbol(Symbol):
   def __init__(self, name: str, type: str, value: Value, const: bool) -> None:
     super().__init__(name, type, value)

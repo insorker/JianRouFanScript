@@ -1,3 +1,4 @@
+from __future__ import annotations
 from common.value import *
 
 
@@ -39,18 +40,6 @@ class Stmt(AstNode):
   pass
 
 
-class Expr(Stmt):
-  """abstract class"""
-  pass
-
-
-class Factor(Expr):
-  """abstract class"""
-  def __init__(self, type: str) -> None:
-    super().__init__()
-    self.type: str = type
-
-
 class VarDeclarationStmt(Stmt):
   def __init__(self, left: Expr, right: Expr, const: bool) -> None:
     self.left: Expr = left
@@ -65,6 +54,29 @@ class VarDeclarationStmt(Stmt):
     res += f'\n{self._tab(indent+1)}{{ const: {self.const} }},'
     res += f'\n{self._tab(indent)}}}'
     return res
+  
+
+class FunctionStmt(AstNode):
+  def __init__(self, name: str, params: list[VarFactor], block: Block) -> None:
+    super().__init__()
+    self.name = name
+    self.params = params
+    self.block = block
+
+  def __repr__(self, indent: int) -> str:
+    res = f'{self._tab(indent)}{{'
+    res += f'\n{self._tab(indent+1)}{self.node_type()},'
+    res += f'\n{self._tab(indent+1)}name: {self.name},'
+    res += f'\n{self._tab(indent+1)}'
+    for param in self.params:
+      res += f'\n{param.__repr__(indent+1)},'
+    res += f'\n{self.block.__repr__(indent+1)},'
+    return res
+
+
+class Expr(Stmt):
+  """abstract class"""
+  pass
 
 
 class AssignmentExpr(Expr):
@@ -97,6 +109,13 @@ class BinaryExpr(Expr):
     return res
 
 
+class Factor(Expr):
+  """abstract class"""
+  def __init__(self, type: str) -> None:
+    super().__init__()
+    self.type: str = type
+
+
 class IntegerFactor(Factor):
   def __init__(self, value: Integer) -> None:
     super().__init__(Integer.__name__)
@@ -117,23 +136,17 @@ class FloatFactor(Factor):
 
 class VarFactor(Factor):
   def __init__(self, type: str, name: str) -> None:
-    self.type: str = type
+    super().__init__(type)
     self.name: str = name
   
   def __repr__(self, indent) -> str:
     return f'{self._tab(indent)}{{ {self.node_type()}, {self.name} }}'
 
 
-class AnyFactor(Factor):
-  def __init__(self) -> None:
-    super().__init__(Null.__name__)
-    self.value: Null = Null()
-
-
 class UndefinedFactor(Factor):
   def __init__(self) -> None:
     super().__init__(Null.__name__)
-    self.value: Null = Null()
+    self.value: Undefined = Undefined()
 
 
 class NullFactor(Factor):

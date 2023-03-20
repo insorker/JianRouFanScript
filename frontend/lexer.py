@@ -5,6 +5,7 @@ import re
 class TokenType(Enum):
   LET = auto()
   CONST = auto()
+  FUNCTION = auto()
   COMMENT = auto()
 
   INTEGER = auto()
@@ -29,6 +30,7 @@ class TokenType(Enum):
 TOKEN_REGEX = {
   TokenType.LET: r'let',
   TokenType.CONST: r'const',
+  TokenType.FUNCTION: r'def',
   TokenType.COMMENT: r'//[^\n]*',
   TokenType.INTEGER: r'[1-9]+[0-9]*|0',
   TokenType.FLOAT: r'([0-9]*[.])?[0-9]+',
@@ -56,6 +58,10 @@ class Token:
 
 
 class Lexer:
+  def __init__(self) -> None:
+    self.lineno = 0
+    self.column = 0
+
   def tokenize(self, code: str) -> list[Token]:
     tokens: list[Token] = []
     match = None
@@ -72,6 +78,9 @@ class Lexer:
             pass
           elif tokentype == TokenType.COMMENT:
             pass
+          elif tokentype == TokenType.SEMICOLON and value == '\n':
+            self.lineno += 1
+            self.column = 0
           elif tokentype == TokenType.STRING:
             tokens.append(Token(tokentype, value[1:-1]))
           else:

@@ -13,6 +13,12 @@ class Value:
     if type(value) == Integer or type(value) == Float:
       return True
     return False
+  
+
+class Function(Value):
+  def __init__(self, value: int) -> None:
+    super().__init__()
+    self.value: int = value
 
 
 class Integer(Value):
