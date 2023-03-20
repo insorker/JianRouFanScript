@@ -1,8 +1,13 @@
 from typing import Union
-from symbol.builtintype import BuiltinType
+from frontend.builtintype import BuiltinType
+from frontend.symbol import SymbolTable
 
 
 class AstNode:
+  """abstract class"""
+  def __init__(self) -> None:
+    self.symtab: SymbolTable
+
   def node_type(self) -> str:
     """return class name"""
     return type(self).__name__
@@ -35,10 +40,12 @@ class Program(Block):
 
 
 class Stmt(AstNode):
+  """abstract class"""
   pass
 
 
 class Expr(Stmt):
+  """abstract class"""
   pass
 
 
@@ -117,3 +124,40 @@ class NullFactor(Factor):
   
   def __repr__(self, indent) -> str:
     return f'{self._tab(indent)}{{ {self.node_type()} }}'
+  
+
+class NodeVisitor:
+  def visit(self, node: AstNode):
+    return getattr(
+      self,
+      f'visit_{type(node).__name__}',
+      self.visit_error
+    )(node)
+  
+  def visit_Program(self, program: Program):
+    self.visit_Block(program)
+  
+  def visit_Block(self, block: Block):
+    for node in block.body:
+      self.visit(node)
+
+  def visit_VarDeclarationStmt(self, stmt: VarDeclarationStmt):
+    pass
+
+  def visit_AssignmentExpr(self, expr: AssignmentExpr):
+    pass
+
+  def visit_BinaryExpr(self, expr: BinaryExpr):
+    pass
+
+  def visit_NumberFactor(self, factor: NumberFactor):
+    pass
+
+  def visit_VarFactor(self, factor: VarFactor):
+    pass
+
+  def visit_NullFactor(self, factor: NullFactor):
+    pass
+
+  def visit_error(self, node: AstNode):
+    raise Exception(f'Method visit_{type(node).__name__} is not defined.')

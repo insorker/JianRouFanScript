@@ -1,8 +1,8 @@
 from typing import cast
 
-from symbol.builtintype import BuiltinType
-from .ast import AssignmentExpr, BinaryExpr, VarDeclarationStmt, Expr, Block, VarFactor, NullFactor, NumberFactor, Program, Stmt
-from .lexer import Token, TokenType, tokenize
+from frontend.builtintype import BuiltinType
+from frontend.ast import *
+from frontend.analyzer.lexer import Token, TokenType
 
 
 class Parser:
@@ -22,9 +22,9 @@ class Parser:
     
     raise Exception(__file__, f'Token {tokentype.name} not found.')
 
-  def parse(self, code: str) -> Program:
+  def parse(self, tokens: list[Token]) -> Program:
     """return the ast of code"""
-    self.tokens = tokenize(code)
+    self.tokens = tokens
 
     return self.parse_program()
 

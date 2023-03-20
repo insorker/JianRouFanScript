@@ -25,6 +25,7 @@ class TokenType(Enum):
   SPACE = auto()
   EOF = auto()
 
+
 TOKEN_REGEX = {
   TokenType.LET: r'let',
   TokenType.CONST: r'const',
@@ -43,6 +44,7 @@ TOKEN_REGEX = {
   TokenType.SPACE: r'[ \t\r]',
 }
 
+
 class Token:
   def __init__(self, type: TokenType, value: str) -> None:
     self.type: TokenType = type
@@ -51,31 +53,33 @@ class Token:
   def __repr__(self):
     return f'{{ {self.type}, {self.value} }}'
 
-def tokenize(code: str) -> list[Token]:
-  tokens: list[Token] = []
-  match = None
 
-  while code:
-    for tokentype, pattern in TOKEN_REGEX.items():
-      match = re.match(pattern, code)
+class Lexer:
+  def tokenize(self, code: str) -> list[Token]:
+    tokens: list[Token] = []
+    match = None
 
-      if match:
-        value = match.group()
-        code = code[len(value):]
+    while code:
+      for tokentype, pattern in TOKEN_REGEX.items():
+        match = re.match(pattern, code)
 
-        if tokentype == TokenType.SPACE:
-          pass
-        elif tokentype == TokenType.COMMENT:
-          pass
-        elif tokentype == TokenType.STRING:
-          tokens.append(Token(tokentype, value[1:-1]))
-        else:
-          tokens.append(Token(tokentype, value))
-        
-        break
+        if match:
+          value = match.group()
+          code = code[len(value):]
 
-    if match == None:
-      raise Exception(__file__, 'Not valid charater: ' + code[0])
+          if tokentype == TokenType.SPACE:
+            pass
+          elif tokentype == TokenType.COMMENT:
+            pass
+          elif tokentype == TokenType.STRING:
+            tokens.append(Token(tokentype, value[1:-1]))
+          else:
+            tokens.append(Token(tokentype, value))
+          
+          break
 
-  tokens.append(Token(TokenType.EOF, 'EOF'))
-  return tokens
+      if match == None:
+        raise Exception(__file__, 'Not valid charater: ' + code[0])
+
+    tokens.append(Token(TokenType.EOF, 'EOF'))
+    return tokens
