@@ -31,6 +31,7 @@ TOKEN_REGEX = {
   TokenType.CONST: r'const',
   TokenType.COMMENT: r'//[^\n]*',
   TokenType.INTEGER: r'[1-9]+[0-9]*|0',
+  TokenType.FLOAT: r'([0-9]*[.])?[0-9]+',
   TokenType.IDENTIFIER: r'[a-zA-Z_]+[a-zA-Z_0-9]*',
   TokenType.STRING: r'".*?"',
   TokenType.OPERATER: r'[+\-*/%]',

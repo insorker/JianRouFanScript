@@ -1,24 +1,19 @@
 from typing import cast
 from frontend.ast import *
-from frontend.symbol import VarSymbol, SymbolTable
+from common.symbol import VarSymbol, SymbolTable
 
 
 class SemanticAnalyzer(NodeVisitor):
   def __init__(self) -> None:
     self._symtab = SymbolTable(None)
   
-  def visit_Program(self, program: Program) -> Program:
-    program.symtab = self._symtab
-
+  def visit_Program(self, program: Program):
     for node in program.body:
       self.visit(node)
-
-    return program
 
   def visit_Block(self, block: Block):
     enclosing_symtab = self._symtab
     self._symtab = SymbolTable(self._symtab)
-    block.symtab = self._symtab
 
     for node in block.body:
       self.visit(node)
@@ -28,7 +23,7 @@ class SemanticAnalyzer(NodeVisitor):
   def visit_VarDeclarationStmt(self, stmt: VarDeclarationStmt):
     if type(stmt.left) == VarFactor:
       var = cast(VarFactor, stmt.left)
-      self._symtab.declare(VarSymbol(var.name, var.type, stmt.const))
+      self._symtab.declare(VarSymbol(var.name, var.type, Value(), stmt.const))
     else:
       raise Exception(f'Cannot assign to {stmt.left.node_type()} here.')
     

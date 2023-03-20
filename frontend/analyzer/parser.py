@@ -1,6 +1,4 @@
 from typing import cast
-
-from frontend.builtintype import BuiltinType
 from frontend.ast import *
 from frontend.analyzer.lexer import Token, TokenType
 
@@ -159,46 +157,21 @@ class Parser:
     
     return left
   
-  def parse_unary_expr(self) -> Expr:
-    operator = self._eat(TokenType.OPERATER).value
-
-    if operator == '+' or operator == '-':
-      result = self.parse_factor()
-
-      if issubclass(result.__class__, NumberFactor):
-        if operator == '+':
-          result = cast(NumberFactor, result)
-          result.value = result.value
-        elif operator == '-':
-          result = cast(NumberFactor, result)
-          result.value = -result.value
-      else:
-        raise Exception(__file__, 'Not number factor.', result.__class__)
-    else:
-      raise Exception(__file__, 'Unknow unary expr.')
-
-    return result
-  
   def parse_factor(self) -> Expr:
     """
-      factor: (PLUS | MINUS) factor
-            | INTEGER
+      factor: INTEGER
             | FLOAT
             | IDENTIFIER
             | OPEN_PAREN expr CLOSE_PAREN
     """
-    if self._tk().type == TokenType.OPERATER \
-      and (self._tk().value == '+' or self._tk().value == '-'):
-      return self.parse_unary_expr()
-    
-    elif self._tk().type == TokenType.INTEGER:
-      return NumberFactor(BuiltinType.INTEGER, int(self._eat(None).value))
+    if self._tk().type == TokenType.INTEGER:
+      return IntegerFactor(Integer(int(self._eat(None).value)))
     
     elif self._tk().type == TokenType.FLOAT:
-      return NumberFactor(BuiltinType.FLOAT, int(self._eat(None).value))
+      return FloatFactor(Float(int(self._eat(None).value)))
     
     elif self._tk().type == TokenType.IDENTIFIER:
-      return VarFactor(BuiltinType.ANY, self._eat(None).value)
+      return VarFactor(Any.__name__, self._eat(None).value)
     
     elif self._tk().type == TokenType.OPEN_PAREN:
       self._eat(TokenType.OPEN_PAREN)

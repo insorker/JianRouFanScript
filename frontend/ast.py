@@ -1,16 +1,11 @@
-from typing import Union
-from frontend.builtintype import BuiltinType
-from frontend.symbol import SymbolTable
+from common.value import *
 
 
 class AstNode:
   """abstract class"""
-  def __init__(self) -> None:
-    self.symtab: SymbolTable
-
   def node_type(self) -> str:
     """return class name"""
-    return type(self).__name__
+    return self.__class__.__name__
 
   def _tab(self, level: int) -> str:
     return '  ' * level
@@ -50,8 +45,10 @@ class Expr(Stmt):
 
 
 class Factor(Expr):
-  def __init__(self, type: BuiltinType) -> None:
-    self.type: BuiltinType = type
+  """abstract class"""
+  def __init__(self, type: str) -> None:
+    super().__init__()
+    self.type: str = type
 
 
 class VarDeclarationStmt(Stmt):
@@ -100,30 +97,49 @@ class BinaryExpr(Expr):
     return res
 
 
-class NumberFactor(Factor):
-  def __init__(self, type: BuiltinType, value: Union[int, float]) -> None:
-    super().__init__(type)
-    self.value: Union[int, float] = value
+class IntegerFactor(Factor):
+  def __init__(self, value: Integer) -> None:
+    super().__init__(Integer.__name__)
+    self.value: Integer = value
+  
+  def __repr__(self, indent) -> str:
+    return f'{self._tab(indent)}{{ {self.node_type()}, {self.value} }}'
+  
+
+class FloatFactor(Factor):
+  def __init__(self, value: Float) -> None:
+    super().__init__(Float.__name__)
+    self.value: Float = value
   
   def __repr__(self, indent) -> str:
     return f'{self._tab(indent)}{{ {self.node_type()}, {self.value} }}'
 
 
 class VarFactor(Factor):
-  def __init__(self, type: BuiltinType, name: str) -> None:
-    super().__init__(type)
+  def __init__(self, type: str, name: str) -> None:
+    self.type: str = type
     self.name: str = name
   
   def __repr__(self, indent) -> str:
     return f'{self._tab(indent)}{{ {self.node_type()}, {self.name} }}'
 
 
+class AnyFactor(Factor):
+  def __init__(self) -> None:
+    super().__init__(Null.__name__)
+    self.value: Null = Null()
+
+
+class UndefinedFactor(Factor):
+  def __init__(self) -> None:
+    super().__init__(Null.__name__)
+    self.value: Null = Null()
+
+
 class NullFactor(Factor):
   def __init__(self) -> None:
-    super().__init__(BuiltinType.NULL)
-  
-  def __repr__(self, indent) -> str:
-    return f'{self._tab(indent)}{{ {self.node_type()} }}'
+    super().__init__(Null.__name__)
+    self.value: Null = Null()
   
 
 class NodeVisitor:
@@ -150,7 +166,10 @@ class NodeVisitor:
   def visit_BinaryExpr(self, expr: BinaryExpr):
     pass
 
-  def visit_NumberFactor(self, factor: NumberFactor):
+  def visit_IntegerFactor(self, factor: IntegerFactor):
+    pass
+
+  def visit_FloatFactor(self, factor: FloatFactor):
     pass
 
   def visit_VarFactor(self, factor: VarFactor):
