@@ -6,9 +6,11 @@ from common.error import SemanticError
 
 class SemanticAnalyzer(NodeVisitor):
   def __init__(self) -> None:
-    self._symtab = SymbolTable(None)
+    self._symtab: SymbolTable
   
   def visit_Program(self, program: Program):
+    self._symtab = SymbolTable(None)
+
     for node in program.body:
       self.visit(node)
 
@@ -69,12 +71,10 @@ class SemanticAnalyzer(NodeVisitor):
     else:
       raise SemanticError(f'\'{factor}\' is not callable.')
     enclosing_symtab = self._symtab
-    self._symtab = symbol.symtab
+    self._symtab = SymbolTable(symbol.symtab)
 
     if len(symbol.params) == len(factor.params):
       for idx, param in enumerate(factor.params):
-        if symbol.params[idx].type != param.type:
-          raise SemanticError(f'Type "{symbol.params[idx].type}" cannot be assigned to type "{param.type}"')
         var = cast(VarFactor, param)
         self._symtab.declare(VarSymbol(var.name, var.type, False))
       self.visit(symbol.block)

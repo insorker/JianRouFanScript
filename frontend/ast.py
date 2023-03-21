@@ -155,7 +155,7 @@ class FloatFactor(Factor):
 
 
 class FnCallFactor(Factor):
-  def __init__(self, name: str, params: list[VarFactor]) -> None:
+  def __init__(self, name: str, params: list[Expr]) -> None:
     super().__init__(Function.__name__)
     self.name = name
     self.params = params
