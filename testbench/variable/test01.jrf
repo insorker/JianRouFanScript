@@ -1,0 +1,5 @@
+let x = 1
+const y = x + 1
+let z = x = y, a, b
+const c
+print(x, y, z, a, b, c)

@@ -1,0 +1,17 @@
+function add(a, b) {
+  return a + b
+}
+
+function mul(a, b) {
+  return a * b
+}
+
+function mix(a, b) {
+  let c1 = add(a, b);
+  let c2 = mul(b, a)
+  return c1 - c2
+}
+
+print(add(1, 2))
+print(mul(3, 4))
+print(mix(5, 6))
