@@ -1,6 +1,6 @@
 from typing import cast
 from frontend.ast import *
-from common.symbol import VarSymbol, SymbolTable
+from frontend.symbol import VarSymbol, SymbolTable
 from common.error import SemanticError
 
 
