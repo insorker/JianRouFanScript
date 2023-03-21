@@ -77,6 +77,7 @@ class SemanticAnalyzer(NodeVisitor):
     self._symtab = SymbolTable(symbol.symtab)
 
     if len(symbol.params) == len(factor.params):
+      # since there's no value to parse, but need to declare param var, ar is put latter
       for param in factor.params:
         var = cast(VarFactor, param)
         self._symtab.declare(VarSymbol(var.name, var.type, False))

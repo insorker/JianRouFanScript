@@ -89,15 +89,15 @@ class Interpreter(Ast.NodeVisitor):
     fn_symbol = cast(Function, self._ar.lookup(factor.name))
 
     enclosing_ar = self._ar
-    self._ar = ActivationRecord(fn_symbol.name, ARType.FUNCTION, fn_symbol.ar)
-    block = fn_symbol.block
-
+    # read params before replace the ar
+    fn_ar = ActivationRecord(fn_symbol.name, ARType.FUNCTION, fn_symbol.ar)
     for idx, param in enumerate(factor.params):
       param_name = fn_symbol.params[idx]
       param_value = self.visit(param)
-      self._ar.declare(param_name, param_value)
-    value = self.visit(block)
+      fn_ar.declare(param_name, param_value)
 
+    self._ar = fn_ar
+    value = self.visit(fn_symbol.block)
     self._ar = enclosing_ar
     return value
 
