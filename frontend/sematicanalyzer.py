@@ -44,7 +44,7 @@ class SemanticAnalyzer(NodeVisitor):
   def visit_FnDeclarationStmt(self, stmt: FnDeclarationStmt):
     params = []
     for param in stmt.params:
-      params.append(self.visit(param))
+      params.append(VarSymbol(param.name, param.type, False))
     self._symtab.declare(FnSymbol(stmt.name, stmt.type, params, stmt.block, self._symtab))
 
   def visit_FnReturnStmt(self, stmt: FnReturnStmt):
@@ -77,7 +77,7 @@ class SemanticAnalyzer(NodeVisitor):
     self._symtab = SymbolTable(symbol.symtab)
 
     if len(symbol.params) == len(factor.params):
-      for idx, param in enumerate(factor.params):
+      for param in factor.params:
         var = cast(VarFactor, param)
         self._symtab.declare(VarSymbol(var.name, var.type, False))
       self.visit(symbol.block)
