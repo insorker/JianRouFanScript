@@ -15,19 +15,15 @@ class Interpreter(Ast.NodeVisitor):
   def visit_Program(self, program: Ast.Program):
     self._ar = ActivationRecord('program', ARType.PROGRAM)
 
-    res: Value = Value()
     for node in program.body:
-      res = self.visit(node)
-
-    return res
+      self.visit(node)
   
   def visit_Block(self, block: Ast.Block):
     enclosing_ar = self._ar
     self._ar = ActivationRecord('block', ARType.BLOCK, enclosing_ar)
 
     for node in block.body:
-      if self.visit(node):
-        raise Exception('Runtime error.')
+      self.visit(node)
 
     self._ar = enclosing_ar
 
@@ -49,13 +45,13 @@ class Interpreter(Ast.NodeVisitor):
   def visit_VarDeclarationStmt(self, stmt: Ast.VarDeclarationStmt):
     var = cast(Ast.VarFactor, stmt.left)
     value = self.visit(stmt.right)
-    self._ar.set(var.name, value)
+    self._ar.declare(var.name, value)
     
   def visit_FnDeclarationStmt(self, stmt: Ast.FnDeclarationStmt):
     params = []
     for param in stmt.params:
       params.append(param.name)
-    self._ar.set(stmt.name, Function(stmt.name, params, stmt.block, self._ar))
+    self._ar.declare(stmt.name, Function(stmt.name, params, stmt.block, self._ar))
 
   def visit_FnReturnStmt(self, stmt: Ast.FnReturnStmt):
     return self.visit(stmt.value)
@@ -63,7 +59,7 @@ class Interpreter(Ast.NodeVisitor):
   def visit_AssignmentExpr(self, expr: Ast.AssignmentExpr) -> Value:
     var = cast(Ast.VarFactor, expr.left)
     value = self.visit(expr.right)
-    self._ar.set(var.name, value)
+    self._ar.assign(var.name, value)
     return value
 
   def visit_BinaryExpr(self, expr: Ast.BinaryExpr) -> Value:
@@ -84,7 +80,14 @@ class Interpreter(Ast.NodeVisitor):
     return factor.value
 
   def visit_FnCallFactor(self, factor: Ast.FnCallFactor) -> Value:
-    fn_symbol = cast(Function, self._ar.get(factor.name))
+    if factor.name == 'print':
+      for param in factor.params:
+        param_value = self.visit(param)
+        print(param_value)
+      return Value()
+    
+    fn_symbol = cast(Function, self._ar.lookup(factor.name))
+
     enclosing_ar = self._ar
     self._ar = ActivationRecord(fn_symbol.name, ARType.FUNCTION, fn_symbol.ar)
     block = fn_symbol.block
@@ -92,11 +95,11 @@ class Interpreter(Ast.NodeVisitor):
     for idx, param in enumerate(factor.params):
       param_name = fn_symbol.params[idx]
       param_value = self.visit(param)
-      self._ar.set(param_name, param_value)
+      self._ar.declare(param_name, param_value)
     value = self.visit(block)
 
     self._ar = enclosing_ar
     return value
 
   def visit_VarFactor(self, factor: Ast.VarFactor):
-    return self._ar.get(factor.name)
+    return self._ar.lookup(factor.name)

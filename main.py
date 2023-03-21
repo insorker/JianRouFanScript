@@ -29,14 +29,10 @@ def repl():
 def run():
   with open('main.jrf', 'r') as f:
     tokens = lexer.tokenize(f.read())
-    print(tokens)
     program = parser.parse(tokens)
     semantic_analyzer.visit(program)
-    # result = interpreter.interpret(program)
-
-    print(program)
-    # print(result)
+    interpreter.interpret(program)
 
 if __name__ == '__main__':
-  # run()
-  repl()
+  run()
+  # repl()

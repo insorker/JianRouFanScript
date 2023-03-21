@@ -65,6 +65,9 @@ class SemanticAnalyzer(NodeVisitor):
     self.visit(expr.right)
 
   def visit_FnCallFactor(self, factor: FnCallFactor):
+    if factor.name == 'print':
+      return
+    
     symbol = self._symtab.lookup(factor.name)
     if type(symbol) == FnSymbol:
       symbol = cast(FnSymbol, symbol)

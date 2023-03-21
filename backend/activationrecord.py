@@ -19,24 +19,21 @@ class ActivationRecord:
   def __repr__(self) -> str:
     return str(self._locals)
 
-  def _resolve(self, name: str) -> ActivationRecord | None:
+  def _resolve(self, name: str) -> ActivationRecord:
     if name in self._locals:
       return self
     elif self._control_link:
       return self._control_link._resolve(name)
-    else:
-      return None
-  
-  def set(self, name: str, value: Value):
-    ar = self._resolve(name)
-    if ar:
-      ar._locals[name] = value
-    else:
-      self._locals[name] = value
-
-  def get(self, name: str) -> Value:
-    ar = self._resolve(name)
-    if ar:
-      return ar._locals[name]
     
     raise Exception(f"Runtime error.")
+    
+  def declare(self, name: str, value: Value):
+    self._locals[name] = value
+  
+  def assign(self, name: str, value: Value):
+    ar = self._resolve(name)
+    ar._locals[name] = value
+
+  def lookup(self, name: str) -> Value:
+    ar = self._resolve(name)
+    return ar._locals[name]

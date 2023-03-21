@@ -215,7 +215,7 @@ class Parser:
     elif self._tk().type == TokenType.FLOAT:
       return FloatFactor(Float(int(self._eat(None).value)))
     
-    elif self._tk(1).type == TokenType.OPEN_PAREN:
+    elif self._tk().type == TokenType.IDENTIFIER and self._tk(1).type == TokenType.OPEN_PAREN:
       return self.parse_fn_call_factor()
 
     elif self._tk().type == TokenType.IDENTIFIER:
