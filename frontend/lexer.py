@@ -7,6 +7,7 @@ class TokenType(Enum):
   LET = auto()
   CONST = auto()
   FUNCTION = auto()
+  RETURN = auto()
   COMMENT = auto()
 
   INTEGER = auto()
@@ -31,7 +32,8 @@ class TokenType(Enum):
 TOKEN_REGEX = {
   TokenType.LET: r'let',
   TokenType.CONST: r'const',
-  TokenType.FUNCTION: r'def',
+  TokenType.FUNCTION: r'function',
+  TokenType.RETURN: r'return',
   TokenType.COMMENT: r'//[^\n]*',
   TokenType.INTEGER: r'[1-9]+[0-9]*|0',
   TokenType.FLOAT: r'([0-9]*[.])?[0-9]+',
@@ -63,12 +65,6 @@ class Lexer:
   def __init__(self) -> None:
     self.current_char = ''
     self.lineno = 1
-  
-  def _error(self):
-    message = "Unknow character '{lexeme}', line {lineno}".format(
-      lexeme=self.current_char, lineno=self.lineno,
-    )
-    raise LexerError(message)
 
   def tokenize(self, code: str) -> list[Token]:
     tokens: list[Token] = []

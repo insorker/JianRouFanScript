@@ -1,49 +1,47 @@
 from __future__ import annotations
-from common.value import Value
+import frontend.ast as Ast
 
 
 class Symbol:
-  def __init__(self, name: str, type: str, value: Value) -> None:
+  def __init__(self, name: str, type: str) -> None:
     self.name: str = name
     self.type: str = type
-    self.value: Value = value
   
   def __repr__(self) -> str:
-    return "<{class_name}(name='{name}', type='{type}', value='{value}')>".format(
+    return "<{class_name}(name='{name}', type='{type}'')>".format(
       class_name=self.__class__.__name__,
       name=self.name,
       type=self.type,
-      value=self.value,
     )
-  
-  def setValue(self, value: Value):
-    self.value = value
-  
 
-# class FnSymbol(Symbol):
-#   def __init__(self, name: str, type: str, params: Value) -> None:
-#     super().__init__(name, type, value)
 
+class FnSymbol(Symbol):
+  def __init__(self, name: str, type: str, params: list[VarSymbol], block: Ast.FnBlock, symtab: SymbolTable) -> None:
+    super().__init__(name, type)
+    self.params = params
+    self.block = block
+    self.symtab = symtab
+
+  def __repr__(self) -> str:
+    return "<{class_name}(name='{name}', type='{type}', params={params}')>".format(
+      class_name=self.__class__.__name__,
+      name=self.name,
+      type=self.type,
+      params=self.params
+    )
 
 class VarSymbol(Symbol):
-  def __init__(self, name: str, type: str, value: Value, const: bool) -> None:
-    super().__init__(name, type, value)
+  def __init__(self, name: str, type: str, const: bool) -> None:
+    super().__init__(name, type)
     self.const: bool = const
   
   def __repr__(self) -> str:
-    return "<{class_name}(name='{name}', type='{type}', value={value}, const={const}')>".format(
+    return "<{class_name}(name='{name}', type='{type}', const={const}')>".format(
       class_name=self.__class__.__name__,
       name=self.name,
       type=self.type,
-      value=self.value,
       const=self.const
     )
-  
-  def setValue(self, value: Value):
-    if not self.const:
-      super().setValue(value)
-    else:
-      raise Exception(f'Cannot assign to {self.name} because it is a constant.')
   
 
 class SymbolTable:
@@ -74,11 +72,6 @@ class SymbolTable:
 
     self._symbols[symbol.name] = symbol
 
-  def assign(self, name: str, value: Value):
-    symtab = self._resolve(name)
-    symbol = symtab._symbols[name]
-    symbol.setValue(value)
-  
   def lookup(self, name: str):
     symtab = self._resolve(name)
     return symtab._symbols[name]

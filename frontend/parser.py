@@ -6,25 +6,24 @@ from common.error import ParserError
 
 class Parser:
   def __init__(self) -> None:
-    self.tokens: list[Token] = []
+    self._tokens: list[Token] = []
 
   def _tk(self, bias=0) -> Token:
     """return current token"""
-    return self.tokens[bias]
+    return self._tokens[bias]
 
-  def _eat(self, tokentype: TokenType | None) -> Token:
-    """eat and return current token if type matches"""
-    if tokentype == None:
-      return self.tokens.pop(0)
-    if self._tk().type == tokentype:
-      return self.tokens.pop(0)
+  def _eat(self, token_type: TokenType | None) -> Token:
+    """eat and return eaten token if type matches"""
+    if token_type == None:
+      return self._tokens.pop(0)
+    if self._tk().type == token_type:
+      return self._tokens.pop(0)
     
-    raise ParserError(f'{tokentype} not found, find {self._tk()} instead, line {self._tk().lineno}')
+    raise ParserError(f'Token with {token_type} not found, find {self._tk()} instead, line {self._tk().lineno}')
 
   def parse(self, tokens: list[Token]) -> Program:
-    """return the ast of code"""
-    self.tokens = tokens
-
+    """return ast of code"""
+    self._tokens = tokens[::]
     return self.parse_program()
 
   def parse_program(self) -> Program:
@@ -65,9 +64,10 @@ class Parser:
 
   def parse_stmt(self) -> list[Block] | list[Stmt] | list[Expr]:
     """
-      stmt: blcok
+      stmt: block
           | fn_dclaration_stmt
           | var_declaration_stmt
+          | fn_return_stmt
           | assignment_expr
     """
     if self._tk().type == TokenType.OPEN_BRACE:
@@ -78,6 +78,8 @@ class Parser:
       return self.parse_var_declaration_stmt(False)
     elif self._tk().type == TokenType.CONST:
       return self.parse_var_declaration_stmt(True)
+    elif self._tk().type == TokenType.RETURN:
+      return [self.parse_fn_return_stmt()]
     else:
       return self.parse_assignment_expr()
   
@@ -85,37 +87,35 @@ class Parser:
     """
       var_declaration_stmt: (LET | CONST) assignment_stmt
     """
-    self._eat(self._tk().type)
-    
+    self._eat(None)
     result = []
-    expr_list = self.parse_assignment_expr()
 
-    for expr in expr_list:
+    for expr in self.parse_assignment_expr():
       if type(expr) == AssignmentExpr:
         expr = cast(AssignmentExpr, expr)
         result.append(VarDeclarationStmt(expr.left, expr.right, const))
       else:
-        result.append(VarDeclarationStmt(expr, NullFactor(), const))
+        result.append(VarDeclarationStmt(expr, UndefinedFactor(), const))
     
     return result # list[VariableDeclarationStmt]
 
   def parse_fn_dclaration_stmt(self) -> FnDeclarationStmt:
     """
-      fn_declaration_stmt: FUNCTION IDENTIFIER  fn_params  block
+      fn_declaration_stmt: FUNCTION IDENTIFIER fn_params block
     """
     self._eat(TokenType.FUNCTION)
     name = self._eat(TokenType.IDENTIFIER).value
     params = self.parse_fn_params()
-    block = self.parse_block()
+    block = self.parse_fn_block()
 
-    return FnDeclarationStmt(name, params, block)
+    return FnDeclarationStmt(name, '', params, block)
 
   def parse_fn_params(self) -> list[VarFactor]:
     """
       fn_params: OPEN_PAREN (var_factor (COMMA var_factor)*)? CLOSE_PAREN
     """
     self._eat(TokenType.OPEN_PAREN)
-    result = [ ]
+    result = []
 
     if self._tk().type != TokenType.CLOSE_PAREN:
       result.append(self.parse_var_factor())
@@ -126,6 +126,23 @@ class Parser:
     
     self._eat(TokenType.CLOSE_PAREN)
     return result
+  
+  def parse_fn_block(self) -> FnBlock:
+    """
+      fn_block: OPEN_BRACE stmt_list CLOSE_BRACE
+    """
+    self._eat(TokenType.OPEN_BRACE)
+    block = FnBlock()
+    block.body = self.parse_stmt_list()
+    self._eat(TokenType.CLOSE_BRACE)
+    return block
+
+  def parse_fn_return_stmt(self) -> FnReturnStmt:
+    """
+      fn_return_stmt: RETURN expr
+    """
+    self._eat(TokenType.RETURN)
+    return FnReturnStmt(self.parse_expr())
 
   def parse_single_assignment_expr(self) -> Expr:
     """
@@ -211,7 +228,7 @@ class Parser:
       return value
     
     else:
-      return self.parse_nop()
+      return self.parse_nop_factor()
       
   def parse_fn_call_factor(self) -> Factor:
     """
@@ -219,8 +236,8 @@ class Parser:
     """
     name = self._eat(TokenType.IDENTIFIER).value
     params = []
-
     self._eat(TokenType.OPEN_PAREN)
+    
     if self._tk().type != TokenType.CLOSE_PAREN:
       params.append(self.parse_expr())
 
@@ -235,5 +252,5 @@ class Parser:
     """var_factor: IDENTIFIER"""
     return VarFactor(Any.__name__, self._eat(TokenType.IDENTIFIER).value)
   
-  def parse_nop(self) -> NopFactor:
+  def parse_nop_factor(self) -> NopFactor:
     return NopFactor()
