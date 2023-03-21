@@ -18,25 +18,26 @@ def repl():
 
     tokens = lexer.tokenize(code)
     program = parser.parse(tokens)
-    # semantic_analyzer.visit(program)
-    # result = interpreter.interpret(program)
+    semantic_analyzer.visit(program)
+    interpreter.interpret(program)
 
-    
     print(program)
-    # print(result)
 
 
 def run():
-  with open('main.jrf', 'r') as f:
+  base = './testbench/'
+  num_base = base + 'number/test'
+  var_base = base + 'variable/test'
+  block_base = base + 'block/test'
+  fn_base = base + 'function/test'
+  filename = num_base + '01' + '.jrf'
+
+  with open(filename, 'r') as f:
     tokens = lexer.tokenize(f.read())
-    print(tokens)
     program = parser.parse(tokens)
     semantic_analyzer.visit(program)
-    # result = interpreter.interpret(program)
-
-    print(program)
-    # print(result)
+    interpreter.interpret(program)
 
 if __name__ == '__main__':
-  # run()
-  repl()
+  run()
+  # repl()

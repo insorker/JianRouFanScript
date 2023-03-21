@@ -28,11 +28,13 @@ class Block(AstNode):
 
 
 class Program(Block):
-  def __init__(self) -> None:
-    self.body: list = []
-  
   def __repr__(self) -> str:
     return super().__repr__(0)
+
+
+class FnBlock(Block):
+  def __init__(self) -> None:
+    super().__init__()
 
 
 class Stmt(AstNode):
@@ -42,6 +44,7 @@ class Stmt(AstNode):
 
 class VarDeclarationStmt(Stmt):
   def __init__(self, left: Expr, right: Expr, const: bool) -> None:
+    super().__init__()
     self.left: Expr = left
     self.right: Expr = right
     self.const: bool = const
@@ -57,9 +60,10 @@ class VarDeclarationStmt(Stmt):
   
 
 class FnDeclarationStmt(Stmt):
-  def __init__(self, name: str, params: list[VarFactor], block: Block) -> None:
+  def __init__(self, name: str, type: str, params: list[VarFactor], block: FnBlock) -> None:
     super().__init__()
     self.name = name
+    self.type = type
     self.params = params
     self.block = block
 
@@ -67,10 +71,23 @@ class FnDeclarationStmt(Stmt):
     res = f'{self._tab(indent)}{{'
     res += f'\n{self._tab(indent+1)}{self.node_type()},'
     res += f'\n{self._tab(indent+1)}name: {self.name},'
-    res += f'\n{self._tab(indent+1)}'
+    res += f'\n{self._tab(indent+1)}type: {self.type},'
     for param in self.params:
       res += f'\n{param.__repr__(indent+1)},'
     res += f'\n{self.block.__repr__(indent+1)}'
+    res += f'\n{self._tab(indent)}}}'
+    return res
+
+
+class FnReturnStmt(Stmt):
+  def __init__(self, value: Expr) -> None:
+    super().__init__()
+    self.value: Expr = value
+
+  def __repr__(self, indent: int) -> str:
+    res = f'{self._tab(indent)}{{'
+    res += f'\n{self._tab(indent+1)}{self.node_type()},'
+    res += f'\n{self.value.__repr__(indent+1)},'
     res += f'\n{self._tab(indent)}}}'
     return res
 
@@ -82,6 +99,7 @@ class Expr(Stmt):
 
 class AssignmentExpr(Expr):
   def __init__(self, left: Expr, right: Expr) -> None:
+    super().__init__()
     self.left: Expr = left
     self.right: Expr = right
   
@@ -96,6 +114,7 @@ class AssignmentExpr(Expr):
 
 class BinaryExpr(Expr):
   def __init__(self, left: Expr, right: Expr, operator: str) -> None:
+    super().__init__()
     self.left: Expr = left
     self.right: Expr = right
     self.operator: str = operator
@@ -136,7 +155,7 @@ class FloatFactor(Factor):
 
 
 class FnCallFactor(Factor):
-  def __init__(self, name: str, params: list[VarFactor]) -> None:
+  def __init__(self, name: str, params: list[Expr]) -> None:
     super().__init__(Function.__name__)
     self.name = name
     self.params = params
@@ -164,17 +183,11 @@ class UndefinedFactor(Factor):
   def __init__(self) -> None:
     super().__init__(Undefined.__name__)
     self.value: Undefined = Undefined()
-
-
-class NullFactor(Factor):
-  def __init__(self) -> None:
-    super().__init__(Null.__name__)
-    self.value: Null = Null()
   
 
 class NopFactor(Factor):
   def __init__(self) -> None:
-    super().__init__('')
+    super().__init__('Nop')
 
 
 class NodeVisitor:
@@ -192,7 +205,17 @@ class NodeVisitor:
     for node in block.body:
       self.visit(node)
 
+  def visit_FnBlock(self, block: FnBlock):
+    for node in block.body:
+      self.visit(node)
+
   def visit_VarDeclarationStmt(self, stmt: VarDeclarationStmt):
+    pass
+
+  def visit_FnDeclarationStmt(self, stmt: FnDeclarationStmt):
+    pass
+
+  def visit_FnReturnStmt(self, stmt: FnReturnStmt):
     pass
 
   def visit_AssignmentExpr(self, expr: AssignmentExpr):
@@ -213,8 +236,8 @@ class NodeVisitor:
   def visit_VarFactor(self, factor: VarFactor):
     pass
 
-  def visit_NullFactor(self, factor: NullFactor):
-    pass
+  def visit_UndefinedFactor(self, factor: UndefinedFactor):
+    return Undefined()
 
   def visit_NopFactor(self, factor: NopFactor):
     pass

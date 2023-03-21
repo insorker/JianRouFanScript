@@ -1,0 +1,9 @@
+function add() {
+  function add(a, b) {
+    return a + b;
+  }
+  return add      // correct
+}
+
+let x = add       // error
+let y = add()     // error

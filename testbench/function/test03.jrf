@@ -1,0 +1,14 @@
+let x = 0, y
+function add(x) {
+  x = x - 10, y = x + 20
+  function log() {
+    print(x)
+    print(y)
+  }
+  log()
+  print(x)
+  print(y)
+}
+add(x)
+print(x)
+print(y)

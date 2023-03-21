@@ -9,4 +9,17 @@ let x = 1, y = 8, z
   }
 }
 // 1
-x + ((3 - 2) * 4) / x
+print(x)
+print(x + ((3 - 2) * 4) / x)
+
+x = 1
+function f() {
+  let x = 7
+  x = 5, y = 10
+  return 4
+  function f() {
+    return 1
+  }
+}
+z = x + f() * y;
+print(z)

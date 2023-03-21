@@ -16,9 +16,13 @@ class Value:
   
 
 class Function(Value):
-  def __init__(self, value: int) -> None:
+  def __init__(self, name: str, params: list[str], block, ar) -> None:
     super().__init__()
-    self.value: int = value
+    self.value = name
+    self.name = name
+    self.params = params
+    self.block = block
+    self.ar = ar
 
 
 class Integer(Value):
@@ -43,9 +47,3 @@ class Undefined(Value):
   def __init__(self) -> None:
     super().__init__()
     self.value: str = 'undefined'
-
-
-class Null(Value):
-  def __init__(self) -> None:
-    super().__init__()
-    self.value: str = 'null'
