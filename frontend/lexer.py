@@ -10,8 +10,8 @@ class TokenType(Enum):
   RETURN = auto()
   COMMENT = auto()
 
-  INTEGER = auto()
   FLOAT = auto()
+  INTEGER = auto()
   IDENTIFIER = auto()
   STRING = auto()
   
@@ -35,8 +35,8 @@ TOKEN_REGEX = {
   TokenType.FUNCTION: r'function',
   TokenType.RETURN: r'return',
   TokenType.COMMENT: r'//[^\n]*',
+  TokenType.FLOAT: r'[0-9]*[.][0-9]+',
   TokenType.INTEGER: r'[1-9]+[0-9]*|0',
-  TokenType.FLOAT: r'([0-9]*[.])?[0-9]+',
   TokenType.IDENTIFIER: r'[a-zA-Z_]+[a-zA-Z_0-9]*',
   TokenType.STRING: r'".*?"',
   TokenType.OPERATER: r'[+\-*/%]',
@@ -86,7 +86,10 @@ class Lexer:
             pass
           elif tokentype == TokenType.SEMICOLON and value == '\n':
             self.lineno += 1
+            tokens.append(Token(tokentype, ';', self.lineno))
+          elif tokentype == TokenType.CLOSE_BRACE:
             tokens.append(Token(tokentype, value, self.lineno))
+            tokens.append(Token(TokenType.SEMICOLON, ';', self.lineno))
           elif tokentype == TokenType.STRING:
             tokens.append(Token(tokentype, value[1:-1], self.lineno))
           else:

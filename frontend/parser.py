@@ -181,7 +181,7 @@ class Parser:
     left = self.parse_multiplicative_expr()
 
     while self._tk().value == '+' or self._tk().value == '-':
-      operator = self._eat(TokenType.OPERATER).value
+      operator = self._eat(None).value
       right = self.parse_multiplicative_expr()
       left = BinaryExpr(left, right, operator)
     
@@ -193,8 +193,8 @@ class Parser:
     """
     left = self.parse_factor()
 
-    while self._tk().value == '*' or self._tk().value == '/':
-      operator = self._eat(TokenType.OPERATER).value
+    while self._tk().value == '*' or self._tk().value == '/' or self._tk().value == '%':
+      operator = self._eat(None).value
       right = self.parse_factor()
       left = BinaryExpr(left, right, operator)
     
@@ -213,7 +213,7 @@ class Parser:
       return IntegerFactor(Integer(int(self._eat(None).value)))
     
     elif self._tk().type == TokenType.FLOAT:
-      return FloatFactor(Float(int(self._eat(None).value)))
+      return FloatFactor(Float(float(self._eat(None).value)))
     
     elif self._tk().type == TokenType.IDENTIFIER and self._tk(1).type == TokenType.OPEN_PAREN:
       return self.parse_fn_call_factor()

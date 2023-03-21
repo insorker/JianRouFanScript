@@ -237,7 +237,7 @@ class NodeVisitor:
     pass
 
   def visit_UndefinedFactor(self, factor: UndefinedFactor):
-    pass
+    return Undefined()
 
   def visit_NopFactor(self, factor: NopFactor):
     pass
